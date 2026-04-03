@@ -16,5 +16,9 @@
         <property name="hibernate.hbm2ddl.auto">update</property>
 
         <mapping class="com.nexonsalary.model.Employee"/>
+        <mapping class="com.nexonsalary.model.Agent"/>
+        <mapping class="com.nexonsalary.model.Member"/>
+        <mapping class="com.nexonsalary.model.MonthlyMemberBalance"/>
+        <mapping class="com.nexonsalary.model.CommissionTransaction"/>
     </session-factory>
 </hibernate-configuration>
