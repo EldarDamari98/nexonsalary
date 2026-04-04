@@ -1,6 +1,10 @@
 package com.nexonsalary.config;
 
+import com.nexonsalary.model.Agent;
+import com.nexonsalary.model.CommissionTransaction;
 import com.nexonsalary.model.Employee;
+import com.nexonsalary.model.Member;
+import com.nexonsalary.model.MonthlyMemberBalance;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -24,6 +28,10 @@ public class HibernateUtil {
                 configuration.setProperty("hibernate.hbm2ddl.auto", "validate");
 
                 configuration.addAnnotatedClass(Employee.class);
+                configuration.addAnnotatedClass(Agent.class);
+                configuration.addAnnotatedClass(Member.class);
+                configuration.addAnnotatedClass(MonthlyMemberBalance.class);
+                configuration.addAnnotatedClass(CommissionTransaction.class);
 
                 StandardServiceRegistryBuilder builder =
                         new StandardServiceRegistryBuilder().applySettings(configuration.getProperties());
