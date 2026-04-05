@@ -1,6 +1,5 @@
 package com.nexonsalary.repository;
-
-import com.nexonsalary.config.HibernateUtil;
+import com.nexonsalary.util.HibernateUtil;
 import com.nexonsalary.model.Employee;
 import org.hibernate.Session;
 import java.util.List;

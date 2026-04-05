@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
         name = "monthly_member_balances",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uq_member_agent_balance_date",
-                        columnNames = {"member_id", "agent_id", "balance_date"}
+                        name = "uq_account_balance_date",
+                        columnNames = {"account_id", "balance_date"}
                 )
         }
 )
@@ -30,6 +30,10 @@ public class MonthlyMemberBalance {
     @JoinColumn(name = "agent_id", nullable = false)
     private Agent agent;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private MemberAccount account;
+
     @Column(name = "balance_date", nullable = false)
     private LocalDate balanceDate;
 
@@ -45,10 +49,15 @@ public class MonthlyMemberBalance {
     public MonthlyMemberBalance() {
     }
 
-    public MonthlyMemberBalance(Member member, Agent agent, LocalDate balanceDate,
-                                BigDecimal totalBalance, String sourceFileName) {
+    public MonthlyMemberBalance(Member member,
+                                Agent agent,
+                                MemberAccount account,
+                                LocalDate balanceDate,
+                                BigDecimal totalBalance,
+                                String sourceFileName) {
         this.member = member;
         this.agent = agent;
+        this.account = account;
         this.balanceDate = balanceDate;
         this.totalBalance = totalBalance;
         this.sourceFileName = sourceFileName;
@@ -77,6 +86,14 @@ public class MonthlyMemberBalance {
 
     public void setAgent(Agent agent) {
         this.agent = agent;
+    }
+
+    public MemberAccount getAccount() {
+        return account;
+    }
+
+    public void setAccount(MemberAccount account) {
+        this.account = account;
     }
 
     public LocalDate getBalanceDate() {

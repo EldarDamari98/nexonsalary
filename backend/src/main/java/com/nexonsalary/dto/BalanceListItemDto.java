@@ -1,43 +1,42 @@
 package com.nexonsalary.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
-public class MonthlyMemberBalanceDto {
+public class BalanceListItemDto {
 
-    private LocalDate balanceDate;
+    private Long balanceId;
     private String memberName;
     private String nationalId;
     private String accountNumber;
-    private String agentCode;
     private String agentName;
+    private String balanceDate;
     private BigDecimal totalBalance;
 
-    public MonthlyMemberBalanceDto() {
+    public BalanceListItemDto() {
     }
 
-    public MonthlyMemberBalanceDto(LocalDate balanceDate,
-                                   String memberName,
-                                   String nationalId,
-                                   String accountNumber,
-                                   String agentCode,
-                                   String agentName,
-                                   BigDecimal totalBalance) {
-        this.balanceDate = balanceDate;
+    public BalanceListItemDto(Long balanceId,
+                              String memberName,
+                              String nationalId,
+                              String accountNumber,
+                              String agentName,
+                              String balanceDate,
+                              BigDecimal totalBalance) {
+        this.balanceId = balanceId;
         this.memberName = memberName;
         this.nationalId = nationalId;
         this.accountNumber = accountNumber;
-        this.agentCode = agentCode;
         this.agentName = agentName;
+        this.balanceDate = balanceDate;
         this.totalBalance = totalBalance;
     }
 
-    public LocalDate getBalanceDate() {
-        return balanceDate;
+    public Long getBalanceId() {
+        return balanceId;
     }
 
-    public void setBalanceDate(LocalDate balanceDate) {
-        this.balanceDate = balanceDate;
+    public void setBalanceId(Long balanceId) {
+        this.balanceId = balanceId;
     }
 
     public String getMemberName() {
@@ -64,20 +63,20 @@ public class MonthlyMemberBalanceDto {
         this.accountNumber = accountNumber;
     }
 
-    public String getAgentCode() {
-        return agentCode;
-    }
-
-    public void setAgentCode(String agentCode) {
-        this.agentCode = agentCode;
-    }
-
     public String getAgentName() {
         return agentName;
     }
 
     public void setAgentName(String agentName) {
         this.agentName = agentName;
+    }
+
+    public String getBalanceDate() {
+        return balanceDate;
+    }
+
+    public void setBalanceDate(String balanceDate) {
+        this.balanceDate = balanceDate;
     }
 
     public BigDecimal getTotalBalance() {

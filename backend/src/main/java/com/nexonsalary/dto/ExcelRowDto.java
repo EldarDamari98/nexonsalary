@@ -8,6 +8,7 @@ public class ExcelRowDto {
     private LocalDate balanceDate;
     private String memberName;
     private String nationalId;
+    private String accountNumber;
     private String secondaryAgentCode;
     private String secondaryAgentName;
     private BigDecimal balance;
@@ -15,11 +16,17 @@ public class ExcelRowDto {
     public ExcelRowDto() {
     }
 
-    public ExcelRowDto(LocalDate balanceDate, String memberName, String nationalId,
-                       String secondaryAgentCode, String secondaryAgentName, BigDecimal balance) {
+    public ExcelRowDto(LocalDate balanceDate,
+                       String memberName,
+                       String nationalId,
+                       String accountNumber,
+                       String secondaryAgentCode,
+                       String secondaryAgentName,
+                       BigDecimal balance) {
         this.balanceDate = balanceDate;
         this.memberName = memberName;
         this.nationalId = nationalId;
+        this.accountNumber = accountNumber;
         this.secondaryAgentCode = secondaryAgentCode;
         this.secondaryAgentName = secondaryAgentName;
         this.balance = balance;
@@ -47,6 +54,14 @@ public class ExcelRowDto {
 
     public void setNationalId(String nationalId) {
         this.nationalId = nationalId;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
     }
 
     public String getSecondaryAgentCode() {

@@ -23,6 +23,24 @@ function Sidebar() {
         >
           Employees
         </NavLink>
+
+        <NavLink
+          to="/balance-import"
+          className={({ isActive }) =>
+            isActive ? "sidebar-link active" : "sidebar-link"
+          }
+        >
+          Balance Import
+        </NavLink>
+
+        <NavLink
+          to="/balances"
+          className={({ isActive }) =>
+            isActive ? "sidebar-link active" : "sidebar-link"
+          }
+        >
+          Balances
+        </NavLink>
       </nav>
     </aside>
   );

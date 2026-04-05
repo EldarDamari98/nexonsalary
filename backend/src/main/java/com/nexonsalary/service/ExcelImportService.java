@@ -34,14 +34,15 @@ public class ExcelImportService {
                     continue;
                 }
 
-                String nationalId = getCellString(row, headers.get("תז/חפ"));
-                String memberName = getCellString(row, headers.get("שם עמית"));
-                String agentCode = getCellString(row, headers.get("מספר סוכן משני"));
-                String agentName = getCellString(row, headers.get("סוכן משני"));
-                BigDecimal balance = getCellBigDecimal(row, headers.get("יתרה"));
-                LocalDate balanceDate = getCellDate(row, headers.get("תאריך היתרה"));
+                String nationalId = getCellString(row, findHeaderIndex(headers, "ת\"ז/ח\"פ", "תז/חפ"));
+                String memberName = getCellString(row, findHeaderIndex(headers, "שם עמית"));
+                String accountNumber = getCellString(row, findHeaderIndex(headers, "מספר חשבון"));
+                String agentCode = getCellString(row, findHeaderIndex(headers, "מספר סוכן משני"));
+                String agentName = getCellString(row, findHeaderIndex(headers, "סוכן משני"));
+                BigDecimal balance = getCellBigDecimal(row, findHeaderIndex(headers, "יתרה"));
+                LocalDate balanceDate = getCellDate(row, findHeaderIndex(headers, "תאריך היתרה"));
 
-                if (isBlank(nationalId) || isBlank(memberName) || balance == null || balanceDate == null) {
+                if (isBlank(nationalId) || isBlank(memberName) || isBlank(accountNumber) || balance == null || balanceDate == null) {
                     continue;
                 }
 
@@ -49,6 +50,7 @@ public class ExcelImportService {
                         balanceDate,
                         memberName.trim(),
                         nationalId.trim(),
+                        accountNumber.trim(),
                         agentCode != null ? agentCode.trim() : "",
                         agentName != null ? agentName.trim() : "",
                         balance
@@ -64,6 +66,7 @@ public class ExcelImportService {
                 .collect(Collectors.groupingBy(row ->
                         row.getBalanceDate() + "|" +
                                 row.getNationalId() + "|" +
+                                safe(row.getAccountNumber()) + "|" +
                                 safe(row.getSecondaryAgentCode())
                 ));
 
@@ -81,6 +84,7 @@ public class ExcelImportService {
                     first.getBalanceDate(),
                     first.getMemberName(),
                     first.getNationalId(),
+                    first.getAccountNumber(),
                     first.getSecondaryAgentCode(),
                     first.getSecondaryAgentName(),
                     totalBalance
@@ -89,7 +93,8 @@ public class ExcelImportService {
 
         result.sort(Comparator
                 .comparing(MonthlyMemberBalanceDto::getBalanceDate)
-                .thenComparing(MonthlyMemberBalanceDto::getNationalId));
+                .thenComparing(MonthlyMemberBalanceDto::getNationalId)
+                .thenComparing(MonthlyMemberBalanceDto::getAccountNumber));
 
         return result;
     }
@@ -101,10 +106,23 @@ public class ExcelImportService {
         }
 
         for (Cell cell : headerRow) {
-            headers.put(getCellString(cell), cell.getColumnIndex());
+            String headerValue = getCellString(cell);
+            if (headerValue != null) {
+                headers.put(headerValue.trim(), cell.getColumnIndex());
+            }
         }
 
         return headers;
+    }
+
+    private Integer findHeaderIndex(Map<String, Integer> headers, String... options) {
+        for (String option : options) {
+            Integer index = headers.get(option);
+            if (index != null) {
+                return index;
+            }
+        }
+        return null;
     }
 
     private String getCellString(Row row, Integer index) {
@@ -129,7 +147,21 @@ public class ExcelImportService {
                 yield String.valueOf(value);
             }
             case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
-            case FORMULA -> cell.getCellFormula();
+            case FORMULA -> {
+                try {
+                    yield cell.getStringCellValue();
+                } catch (Exception e) {
+                    try {
+                        double value = cell.getNumericCellValue();
+                        if (value == (long) value) {
+                            yield String.valueOf((long) value);
+                        }
+                        yield String.valueOf(value);
+                    } catch (Exception ex) {
+                        yield cell.getCellFormula();
+                    }
+                }
+            }
             default -> null;
         };
     }
@@ -155,6 +187,7 @@ public class ExcelImportService {
                     value = value.replace(",", "").trim();
                     yield new BigDecimal(value);
                 }
+                case FORMULA -> BigDecimal.valueOf(cell.getNumericCellValue());
                 default -> null;
             };
         } catch (Exception e) {
@@ -174,6 +207,13 @@ public class ExcelImportService {
 
         try {
             if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+                return cell.getDateCellValue()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
+            }
+
+            if (cell.getCellType() == CellType.FORMULA && DateUtil.isCellDateFormatted(cell)) {
                 return cell.getDateCellValue()
                         .toInstant()
                         .atZone(ZoneId.systemDefault())

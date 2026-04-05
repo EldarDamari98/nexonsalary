@@ -1,56 +1,81 @@
 package com.nexonsalary.service;
 
+import com.nexonsalary.dto.ImportSummaryDto;
 import com.nexonsalary.dto.MonthlyMemberBalanceDto;
 import com.nexonsalary.model.Agent;
 import com.nexonsalary.model.Member;
+import com.nexonsalary.model.MemberAccount;
 import com.nexonsalary.model.MonthlyMemberBalance;
-import com.nexonsalary.config.HibernateUtil;
+import com.nexonsalary.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class MonthlyBalanceService {
 
-    public int saveMonthlyBalances(List<MonthlyMemberBalanceDto> balances, String sourceFileName) {
+    public ImportSummaryDto saveMonthlyBalances(List<MonthlyMemberBalanceDto> balances, String sourceFileName) {
         Session session = HibernateUtil.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
 
-        int savedCount = 0;
+        ImportSummaryDto summary = new ImportSummaryDto();
 
         try {
             for (MonthlyMemberBalanceDto dto : balances) {
-                Agent agent = findOrCreateAgent(session, dto.getAgentCode(), dto.getAgentName());
-                Member member = findOrCreateMember(session, dto.getNationalId(), dto.getMemberName());
+                FindOrCreateAgentResult agentResult =
+                        findOrCreateAgent(session, dto.getAgentCode(), dto.getAgentName());
+
+                FindOrCreateMemberResult memberResult =
+                        findOrCreateMember(session, dto.getNationalId(), dto.getMemberName());
+
+                FindOrCreateAccountResult accountResult =
+                        findOrCreateAccount(session, dto.getAccountNumber(), memberResult.member(), agentResult.agent());
 
                 MonthlyMemberBalance existing = findExistingBalance(
                         session,
-                        member.getId(),
-                        agent.getId(),
+                        accountResult.account().getId(),
                         dto.getBalanceDate()
                 );
 
+                if (agentResult.created()) {
+                    summary.setCreatedAgents(summary.getCreatedAgents() + 1);
+                }
+
+                if (memberResult.created()) {
+                    summary.setCreatedMembers(summary.getCreatedMembers() + 1);
+                }
+
+                if (accountResult.created()) {
+                    summary.setCreatedAccounts(summary.getCreatedAccounts() + 1);
+                }
+
                 if (existing == null) {
                     MonthlyMemberBalance balance = new MonthlyMemberBalance(
-                            member,
-                            agent,
+                            memberResult.member(),
+                            agentResult.agent(),
+                            accountResult.account(),
                             dto.getBalanceDate(),
                             dto.getTotalBalance(),
                             sourceFileName
                     );
 
                     session.persist(balance);
-                    savedCount++;
+                    summary.setCreatedBalances(summary.getCreatedBalances() + 1);
                 } else {
+                    existing.setMember(memberResult.member());
+                    existing.setAgent(agentResult.agent());
+                    existing.setAccount(accountResult.account());
                     existing.setTotalBalance(dto.getTotalBalance());
                     existing.setSourceFileName(sourceFileName);
                     session.merge(existing);
+                    summary.setUpdatedBalances(summary.getUpdatedBalances() + 1);
                 }
             }
 
             transaction.commit();
-            return savedCount;
+            return summary;
 
         } catch (Exception e) {
             if (transaction != null) {
@@ -62,9 +87,10 @@ public class MonthlyBalanceService {
         }
     }
 
-    private Agent findOrCreateAgent(Session session, String agentCode, String agentName) {
+    private FindOrCreateAgentResult findOrCreateAgent(Session session, String agentCode, String agentName) {
         Query<Agent> query = session.createQuery(
-                "from Agent where agentCode = :agentCode", Agent.class);
+                "from Agent where agentCode = :agentCode", Agent.class
+        );
         query.setParameter("agentCode", agentCode);
 
         Agent agent = query.uniqueResult();
@@ -72,17 +98,20 @@ public class MonthlyBalanceService {
         if (agent == null) {
             agent = new Agent(agentCode, agentName);
             session.persist(agent);
-        } else if (agentName != null && !agentName.isBlank()) {
-            agent.setAgentName(agentName);
-            session.merge(agent);
+            return new FindOrCreateAgentResult(agent, true);
+        } else {
+            if (agentName != null && !agentName.isBlank()) {
+                agent.setAgentName(agentName);
+                session.merge(agent);
+            }
+            return new FindOrCreateAgentResult(agent, false);
         }
-
-        return agent;
     }
 
-    private Member findOrCreateMember(Session session, String nationalId, String memberName) {
+    private FindOrCreateMemberResult findOrCreateMember(Session session, String nationalId, String memberName) {
         Query<Member> query = session.createQuery(
-                "from Member where nationalId = :nationalId", Member.class);
+                "from Member where nationalId = :nationalId", Member.class
+        );
         query.setParameter("nationalId", nationalId);
 
         Member member = query.uniqueResult();
@@ -90,29 +119,61 @@ public class MonthlyBalanceService {
         if (member == null) {
             member = new Member(nationalId, memberName);
             session.persist(member);
-        } else if (memberName != null && !memberName.isBlank()) {
-            member.setFullName(memberName);
-            session.merge(member);
+            return new FindOrCreateMemberResult(member, true);
+        } else {
+            if (memberName != null && !memberName.isBlank()) {
+                member.setFullName(memberName);
+                session.merge(member);
+            }
+            return new FindOrCreateMemberResult(member, false);
         }
+    }
 
-        return member;
+    private FindOrCreateAccountResult findOrCreateAccount(Session session,
+                                                          String accountNumber,
+                                                          Member member,
+                                                          Agent agent) {
+        Query<MemberAccount> query = session.createQuery(
+                "from MemberAccount where accountNumber = :accountNumber",
+                MemberAccount.class
+        );
+        query.setParameter("accountNumber", accountNumber);
+
+        MemberAccount account = query.uniqueResult();
+
+        if (account == null) {
+            account = new MemberAccount(accountNumber, member, agent);
+            session.persist(account);
+            return new FindOrCreateAccountResult(account, true);
+        } else {
+            account.setMember(member);
+            account.setAgent(agent);
+            session.merge(account);
+            return new FindOrCreateAccountResult(account, false);
+        }
     }
 
     private MonthlyMemberBalance findExistingBalance(Session session,
-                                                     Long memberId,
-                                                     Long agentId,
-                                                     java.time.LocalDate balanceDate) {
+                                                     Long accountId,
+                                                     LocalDate balanceDate) {
         Query<MonthlyMemberBalance> query = session.createQuery("""
                 from MonthlyMemberBalance
-                where member.id = :memberId
-                  and agent.id = :agentId
+                where account.id = :accountId
                   and balanceDate = :balanceDate
                 """, MonthlyMemberBalance.class);
 
-        query.setParameter("memberId", memberId);
-        query.setParameter("agentId", agentId);
+        query.setParameter("accountId", accountId);
         query.setParameter("balanceDate", balanceDate);
 
         return query.uniqueResult();
+    }
+
+    private record FindOrCreateAgentResult(Agent agent, boolean created) {
+    }
+
+    private record FindOrCreateMemberResult(Member member, boolean created) {
+    }
+
+    private record FindOrCreateAccountResult(MemberAccount account, boolean created) {
     }
 }

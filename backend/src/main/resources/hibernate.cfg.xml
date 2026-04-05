@@ -18,6 +18,7 @@
         <mapping class="com.nexonsalary.model.Employee"/>
         <mapping class="com.nexonsalary.model.Agent"/>
         <mapping class="com.nexonsalary.model.Member"/>
+        <mapping class="com.nexonsalary.model.MemberAccount"/>
         <mapping class="com.nexonsalary.model.MonthlyMemberBalance"/>
         <mapping class="com.nexonsalary.model.CommissionTransaction"/>
     </session-factory>
