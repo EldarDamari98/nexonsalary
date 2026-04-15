@@ -16,12 +16,12 @@ function Sidebar() {
         </NavLink>
 
         <NavLink
-          to="/employees"
+          to="/agents"
           className={({ isActive }) =>
             isActive ? "sidebar-link active" : "sidebar-link"
           }
         >
-          Employees
+          Agents
         </NavLink>
 
         <NavLink

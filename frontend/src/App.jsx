@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import DashboardPage from "./pages/DashboardPage";
-import EmployeesPage from "./pages/EmployeesPage";
+import AgentsPage from "./pages/AgentsPage";
 import BalanceImportPage from "./pages/BalanceImportPage";
 import BalancesPage from "./pages/BalancesPage";
 
@@ -11,7 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/employees" element={<EmployeesPage />} />
+        <Route path="/agents" element={<AgentsPage />} />
         <Route path="/balance-import" element={<BalanceImportPage />} />
         <Route path="/balances" element={<BalancesPage />} />
       </Routes>

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { getAllMembers } from "../api/memberApi";
+import { getAllAgents } from "../api/agentApi";
 
-function EmployeesPage() {
-  const [members, setMembers] = useState([]);
+function AgentsPage() {
+  const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -10,52 +10,51 @@ function EmployeesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const loadMembers = async () => {
+  const loadAgents = async () => {
     try {
       setLoading(true);
       setError("");
-      const data = await getAllMembers();
-      setMembers(data);
+      const data = await getAllAgents();
+      setAgents(data);
     } catch (err) {
-      setError(err.message || "Failed to load members");
+      setError(err.message || "Failed to load agents");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadMembers();
+    loadAgents();
   }, []);
 
-  const filteredMembers = useMemo(() => {
+  const filteredAgents = useMemo(() => {
     const value = search.trim().toLowerCase();
 
-    return members.filter((member) => {
+    return agents.filter((agent) => {
       return (
         !value ||
-        member.memberName?.toLowerCase().includes(value) ||
-        member.nationalId?.toLowerCase().includes(value) ||
-        member.agentName?.toLowerCase().includes(value)
+        agent.agentName?.toLowerCase().includes(value) ||
+        agent.agentCode?.toLowerCase().includes(value)
       );
     });
-  }, [members, search]);
+  }, [agents, search]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [search, pageSize]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredMembers.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filteredAgents.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
 
-  const paginatedMembers = useMemo(() => {
+  const paginatedAgents = useMemo(() => {
     const startIndex = (safeCurrentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    return filteredMembers.slice(startIndex, endIndex);
-  }, [filteredMembers, safeCurrentPage, pageSize]);
+    return filteredAgents.slice(startIndex, endIndex);
+  }, [filteredAgents, safeCurrentPage, pageSize]);
 
   const startRow =
-    filteredMembers.length === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1;
-  const endRow = Math.min(safeCurrentPage * pageSize, filteredMembers.length);
+    filteredAgents.length === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1;
+  const endRow = Math.min(safeCurrentPage * pageSize, filteredAgents.length);
 
   const clearSearch = () => {
     setSearch("");
@@ -66,12 +65,12 @@ function EmployeesPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Members Explorer</h1>
-          <p>View imported members, latest balances and linked accounts</p>
+          <h1>Agents Explorer</h1>
+          <p>View agents, linked members, accounts and managed assets</p>
         </div>
 
         <div className="page-actions">
-          <button className="primary-btn" onClick={loadMembers} disabled={loading}>
+          <button className="primary-btn" onClick={loadAgents} disabled={loading}>
             {loading ? "Refreshing..." : "Refresh"}
           </button>
         </div>
@@ -82,7 +81,7 @@ function EmployeesPage() {
           <input
             className="input"
             type="text"
-            placeholder="Search by member, ID or agent"
+            placeholder="Search by agent name or code"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -115,7 +114,7 @@ function EmployeesPage() {
         {!loading && !error && (
           <div className="balances-toolbar">
             <p className="balances-results-text">
-              Showing {startRow}-{endRow} of {filteredMembers.length} members
+              Showing {startRow}-{endRow} of {filteredAgents.length} agents
             </p>
 
             <div className="pagination-controls">
@@ -145,36 +144,36 @@ function EmployeesPage() {
         )}
 
         {loading ? (
-          <p>Loading members...</p>
+          <p>Loading agents...</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table className="employees-table">
               <thead>
                 <tr>
-                  <th>Member Name</th>
-                  <th>National ID</th>
+                  <th>Agent Code</th>
+                  <th>Agent Name</th>
+                  <th>Members</th>
                   <th>Accounts</th>
-                  <th>Latest Balance</th>
-                  <th>Agent</th>
-                  <th>Last Update</th>
+                  <th>Total Assets</th>
+                  <th>Latest Balance Date</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedMembers.length === 0 ? (
+                {paginatedAgents.length === 0 ? (
                   <tr>
                     <td colSpan="6" style={{ textAlign: "center", padding: "24px" }}>
-                      No members found
+                      No agents found
                     </td>
                   </tr>
                 ) : (
-                  paginatedMembers.map((member) => (
-                    <tr key={member.memberId}>
-                      <td>{member.memberName}</td>
-                      <td>{member.nationalId}</td>
-                      <td>{member.accountsCount}</td>
-                      <td>{formatCurrency(member.latestBalance)}</td>
-                      <td>{member.agentName}</td>
-                      <td>{formatDate(member.lastBalanceDate)}</td>
+                  paginatedAgents.map((agent) => (
+                    <tr key={agent.agentId}>
+                      <td>{agent.agentCode}</td>
+                      <td>{agent.agentName}</td>
+                      <td>{agent.membersCount}</td>
+                      <td>{agent.accountsCount}</td>
+                      <td>{formatCurrency(agent.totalAssets)}</td>
+                      <td>{formatDate(agent.latestBalanceDate)}</td>
                     </tr>
                   ))
                 )}
@@ -195,16 +194,12 @@ function formatCurrency(value) {
 }
 
 function formatDate(value) {
-  if (!value) {
-    return "";
-  }
+  if (!value) return "";
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
+  if (Number.isNaN(date.getTime())) return value;
 
   return date.toLocaleDateString("en-GB");
 }
 
-export default EmployeesPage;
+export default AgentsPage;
