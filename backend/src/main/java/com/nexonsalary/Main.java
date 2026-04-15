@@ -17,7 +17,8 @@ public class Main {
         HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, new AppConfig());
 
         System.out.println("Server started at http://localhost:8080");
-        System.out.println("Employees API: http://localhost:8080/employees");
+        System.out.println("Agents API: http://localhost:8080/agents");
+        System.out.println("Balances API: http://localhost:8080/balances");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             server.shutdownNow();
