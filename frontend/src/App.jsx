@@ -4,6 +4,7 @@ import DashboardPage from "./pages/DashboardPage";
 import AgentsPage from "./pages/AgentsPage";
 import BalanceImportPage from "./pages/BalanceImportPage";
 import BalancesPage from "./pages/BalancesPage";
+import CommissionsPage from "./pages/CommissionsPage";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/agents" element={<AgentsPage />} />
         <Route path="/balance-import" element={<BalanceImportPage />} />
         <Route path="/balances" element={<BalancesPage />} />
+        <Route path="/commissions" element={<CommissionsPage />} />
       </Routes>
     </AppLayout>
   );

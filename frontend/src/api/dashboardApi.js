@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/dashboard";
+const BASE_URL = "http://localhost:8081/dashboard";
 
 export async function getDashboardSummary() {
   const response = await fetch(`${BASE_URL}/summary`);

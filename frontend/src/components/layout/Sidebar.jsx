@@ -41,6 +41,15 @@ function Sidebar() {
         >
           Balances
         </NavLink>
+
+        <NavLink
+          to="/commissions"
+          className={({ isActive }) =>
+            isActive ? "sidebar-link active" : "sidebar-link"
+          }
+        >
+          Commissions
+        </NavLink>
       </nav>
     </aside>
   );

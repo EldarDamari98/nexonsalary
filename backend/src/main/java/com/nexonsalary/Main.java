@@ -13,12 +13,12 @@ public class Main {
     public static void main(String[] args) {
         HibernateUtil.getSessionFactory();
 
-        URI uri = URI.create("http://localhost:8080/");
+        URI uri = URI.create("http://localhost:8081/");
         HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, new AppConfig());
 
-        System.out.println("Server started at http://localhost:8080");
-        System.out.println("Agents API: http://localhost:8080/agents");
-        System.out.println("Balances API: http://localhost:8080/balances");
+        System.out.println("Server started at http://localhost:8081");
+        System.out.println("Agents API: http://localhost:8081/agents");
+        System.out.println("Balances API: http://localhost:8081/balances");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             server.shutdownNow();

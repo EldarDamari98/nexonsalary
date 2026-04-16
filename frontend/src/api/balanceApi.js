@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/balances";
+const BASE_URL = "http://localhost:8081/balances";
 
 export async function uploadBalanceFile(file) {
   const formData = new FormData();

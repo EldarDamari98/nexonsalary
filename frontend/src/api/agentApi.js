@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/agents";
+const BASE_URL = "http://localhost:8081/agents";
 
 export async function getAllAgents() {
   const response = await fetch(BASE_URL);

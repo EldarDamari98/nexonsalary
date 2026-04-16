@@ -22,6 +22,10 @@ public class CommissionTransaction {
     @JoinColumn(name = "agent_id", nullable = false)
     private Agent agent;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private MemberAccount account;
+
     @Column(name = "balance_date", nullable = false)
     private LocalDate balanceDate;
 
@@ -77,6 +81,14 @@ public class CommissionTransaction {
 
     public void setAgent(Agent agent) {
         this.agent = agent;
+    }
+
+    public MemberAccount getAccount() {
+        return account;
+    }
+
+    public void setAccount(MemberAccount account) {
+        this.account = account;
     }
 
     public LocalDate getBalanceDate() {

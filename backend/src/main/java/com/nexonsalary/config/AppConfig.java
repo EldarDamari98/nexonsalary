@@ -1,4 +1,5 @@
 package com.nexonsalary.config;
+import com.nexonsalary.controller.CommissionController;
 import com.nexonsalary.controller.DashboardController;
 import com.nexonsalary.controller.AgentController;
 import com.nexonsalary.controller.BalanceImportController;
@@ -10,6 +11,7 @@ public class AppConfig extends ResourceConfig {
     public AppConfig() {
         register(AgentController.class);
         register(BalanceImportController.class);
+        register(CommissionController.class);
         register(MultiPartFeature.class);
         register(CorsFilter.class);
         register(DashboardController.class);
