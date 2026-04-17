@@ -9,6 +9,7 @@ import org.hibernate.Transaction;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -18,11 +19,12 @@ public class CommissionCalculationService {
         Session session = HibernateUtil.getSessionFactory().openSession();
         Transaction tx = session.beginTransaction();
         try {
-            session.createMutationQuery("delete from CommissionTransaction where balanceDate = :month")
-                    .setParameter("month", month).executeUpdate();
+            LocalDate lastDay = YearMonth.from(month).atEndOfMonth();
+            session.createMutationQuery("delete from CommissionTransaction where balanceDate between :firstDay and :lastDay")
+                    .setParameter("firstDay", month).setParameter("lastDay", lastDay).executeUpdate();
             session.createMutationQuery(
-                    "update ClientAgentHistory set status = 'ACTIVE', leaveDate = null where leaveDate = :month")
-                    .setParameter("month", month).executeUpdate();
+                    "update ClientAgentHistory set status = 'ACTIVE', leaveDate = null where leaveDate between :firstDay and :lastDay")
+                    .setParameter("firstDay", month).setParameter("lastDay", lastDay).executeUpdate();
             tx.commit();
         } catch (Exception e) {
             tx.rollback();
@@ -257,26 +259,29 @@ public class CommissionCalculationService {
 
     // --- Queries ---
 
-    private boolean hasTransactionsForMonth(Session session, LocalDate month) {
+    private boolean hasTransactionsForMonth(Session session, LocalDate firstDay) {
+        LocalDate lastDay = YearMonth.from(firstDay).atEndOfMonth();
         Long count = session.createQuery(
-                "select count(ct) from CommissionTransaction ct where ct.balanceDate = :month", Long.class
-        ).setParameter("month", month).uniqueResult();
+                "select count(ct) from CommissionTransaction ct where ct.balanceDate between :firstDay and :lastDay", Long.class
+        ).setParameter("firstDay", firstDay).setParameter("lastDay", lastDay).uniqueResult();
         return count != null && count > 0;
     }
 
-    private List<MonthlyMemberBalance> getBalancesForMonth(Session session, LocalDate month) {
-        return session.createQuery(
-                "from MonthlyMemberBalance mmb join fetch mmb.member join fetch mmb.agent join fetch mmb.account where mmb.balanceDate = :month",
-                MonthlyMemberBalance.class
-        ).setParameter("month", month).list();
-    }
-
-    private MonthlyMemberBalance getPreviousBalance(Session session, Long accountId, LocalDate beforeMonth) {
+    private List<MonthlyMemberBalance> getBalancesForMonth(Session session, LocalDate firstDay) {
+        LocalDate lastDay = YearMonth.from(firstDay).atEndOfMonth();
         return session.createQuery(
                 "from MonthlyMemberBalance mmb join fetch mmb.member join fetch mmb.agent join fetch mmb.account " +
-                "where mmb.account.id = :accountId and mmb.balanceDate < :month order by mmb.balanceDate desc",
+                "where mmb.balanceDate between :firstDay and :lastDay",
                 MonthlyMemberBalance.class
-        ).setParameter("accountId", accountId).setParameter("month", beforeMonth).setMaxResults(1).uniqueResult();
+        ).setParameter("firstDay", firstDay).setParameter("lastDay", lastDay).list();
+    }
+
+    private MonthlyMemberBalance getPreviousBalance(Session session, Long accountId, LocalDate firstDay) {
+        return session.createQuery(
+                "from MonthlyMemberBalance mmb join fetch mmb.member join fetch mmb.agent join fetch mmb.account " +
+                "where mmb.account.id = :accountId and mmb.balanceDate < :firstDay order by mmb.balanceDate desc",
+                MonthlyMemberBalance.class
+        ).setParameter("accountId", accountId).setParameter("firstDay", firstDay).setMaxResults(1).uniqueResult();
     }
 
     private List<ClientAgentHistory> getActiveHistories(Session session) {

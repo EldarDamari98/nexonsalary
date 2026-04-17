@@ -101,7 +101,7 @@ function CommissionsPage() {
         <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
           <input
             className="input"
-            type="date"
+            type="month"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
             style={{ width: "200px" }}

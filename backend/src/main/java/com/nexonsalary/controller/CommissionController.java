@@ -7,6 +7,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 
 @Path("/commissions")
@@ -26,7 +27,7 @@ public class CommissionController {
         }
 
         try {
-            LocalDate month = LocalDate.parse(monthStr);
+            LocalDate month = YearMonth.parse(monthStr).atDay(1);
             var result = calculationService.calculateForMonth(month);
             return Response.ok(result).build();
         } catch (DateTimeParseException e) {
@@ -55,7 +56,7 @@ public class CommissionController {
         }
 
         try {
-            LocalDate month = LocalDate.parse(monthStr);
+            LocalDate month = YearMonth.parse(monthStr).atDay(1);
             calculationService.deleteForMonth(month);
             var result = calculationService.calculateForMonth(month);
             return Response.ok(result).build();
@@ -81,7 +82,7 @@ public class CommissionController {
         }
 
         try {
-            LocalDate month = LocalDate.parse(monthStr);
+            LocalDate month = YearMonth.parse(monthStr).atDay(1);
             return Response.ok(queryService.getSummaryForMonth(month)).build();
         } catch (DateTimeParseException e) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -106,7 +107,7 @@ public class CommissionController {
         }
 
         try {
-            LocalDate month = LocalDate.parse(monthStr);
+            LocalDate month = YearMonth.parse(monthStr).atDay(1);
             return Response.ok(queryService.getTransactionsForMonth(month, agentId)).build();
         } catch (DateTimeParseException e) {
             return Response.status(Response.Status.BAD_REQUEST)

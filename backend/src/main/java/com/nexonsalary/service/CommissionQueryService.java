@@ -10,18 +10,19 @@ import org.hibernate.Session;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.*;
 
 public class CommissionQueryService {
 
-    public List<AgentCommissionSummaryDto> getSummaryForMonth(LocalDate month) {
+    public List<AgentCommissionSummaryDto> getSummaryForMonth(LocalDate firstDay) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             List<CommissionTransaction> transactions = session.createQuery(
                     "from CommissionTransaction ct " +
                     "join fetch ct.agent join fetch ct.member join fetch ct.account " +
-                    "where ct.balanceDate = :month",
+                    "where ct.balanceDate = :firstDay",
                     CommissionTransaction.class
-            ).setParameter("month", month).list();
+            ).setParameter("firstDay", firstDay).list();
 
             Map<Long, AgentCommissionSummaryDto> summaryByAgent = new LinkedHashMap<>();
 
@@ -64,18 +65,18 @@ public class CommissionQueryService {
         }
     }
 
-    public List<CommissionTransactionDto> getTransactionsForMonth(LocalDate month, Long agentId) {
+    public List<CommissionTransactionDto> getTransactionsForMonth(LocalDate firstDay, Long agentId) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             String hql = "from CommissionTransaction ct " +
                          "join fetch ct.agent join fetch ct.member left join fetch ct.account " +
-                         "where ct.balanceDate = :month";
+                         "where ct.balanceDate = :firstDay";
             if (agentId != null) {
                 hql += " and ct.agent.id = :agentId";
             }
             hql += " order by ct.agent.agentCode, ct.reason";
 
             var query = session.createQuery(hql, CommissionTransaction.class)
-                    .setParameter("month", month);
+                    .setParameter("firstDay", firstDay);
             if (agentId != null) {
                 query.setParameter("agentId", agentId);
             }
