@@ -25,6 +25,7 @@ function CommissionsPage() {
   const [transactionsTotalPages, setTransactionsTotalPages] = useState(1);
   const [loadingResults, setLoadingResults] = useState(false);
   const [resultsError, setResultsError] = useState("");
+  const [noResults, setNoResults] = useState(false);
 
   const [search, setSearch] = useState("");
   const [selectedAgentId, setSelectedAgentId] = useState("");
@@ -140,8 +141,11 @@ function CommissionsPage() {
       setCurrentPage(1);
       setResultsVisible(true);
     } catch (err) {
-      setCalcError(err.message || "Calculation failed");
-
+      if (err.noData) {
+        setCalcError("No Excel file has been uploaded for this month. Please upload a balance file first.");
+      } else {
+        setCalcError(err.message || "Calculation failed");
+      }
       if (err.alreadyCalculated) {
         setAlreadyCalculated(true);
         setPeriod("MONTH");
@@ -390,6 +394,7 @@ function CommissionsPage() {
               </p>
             </div>
 
+<<<<<<< HEAD
             <div className="balances-filters">
               <input
                 className="input"
@@ -401,6 +406,48 @@ function CommissionsPage() {
                   setCurrentPage(1);
                 }}
               />
+=======
+      {noResults && !resultsError && (
+        <p style={{ color: "#6b7280", marginBottom: "16px" }}>
+          No commission data found for this month. Calculate first.
+        </p>
+      )}
+
+      {/* Summary per agent */}
+      {summary.length > 0 && (
+        <div className="card" style={{ marginBottom: "24px" }}>
+          <h2 style={{ margin: "0 0 16px" }}>Summary by Agent</h2>
+          <div style={{ overflowX: "auto" }}>
+            <table className="simple-table">
+              <thead>
+                <tr>
+                  <th>Agent</th>
+                  <th style={{ textAlign: "right" }}>Scope New</th>
+                  <th style={{ textAlign: "right" }}>Scope Delta</th>
+                  <th style={{ textAlign: "right" }}>Clawbacks</th>
+                  <th style={{ textAlign: "right" }}>Nifra</th>
+                  <th style={{ textAlign: "right" }}>Net Commission</th>
+                  <th style={{ textAlign: "right" }}>Transactions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.map((row) => (
+                  <tr key={row.agentId}>
+                    <td>{row.agentName} <span style={{ color: "#6b7280", fontSize: "12px" }}>({row.agentCode})</span></td>
+                    <td style={{ textAlign: "right" }}>{fmt(row.scopeNew)}</td>
+                    <td style={{ textAlign: "right" }}>{fmt(row.scopeDelta)}</td>
+                    <td style={{ textAlign: "right", color: "#dc2626" }}>-{fmt(row.clawbacks)}</td>
+                    <td style={{ textAlign: "right" }}>{fmt(row.nifra)}</td>
+                    <td style={{ textAlign: "right", fontWeight: 600 }}>{fmt(row.netCommission)}</td>
+                    <td style={{ textAlign: "right" }}>{row.transactionCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+>>>>>>> 049b808 (feat: improve commission calculation error handling and add empty state messaging for missing data)
 
               <select
                 className="input"

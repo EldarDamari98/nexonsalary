@@ -10,6 +10,7 @@ export async function calculateCommissions(month) {
   if (!response.ok) {
     const err = new Error(data.message || "Calculation failed");
     err.alreadyCalculated = data.message?.includes("already calculated");
+    err.noData = data.message?.includes("No balance data");
     throw err;
   }
 
