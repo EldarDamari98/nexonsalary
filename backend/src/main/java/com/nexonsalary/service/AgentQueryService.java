@@ -7,6 +7,7 @@ import org.hibernate.Session;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class AgentQueryService {
                     """, Agent.class).getResultList();
 
             List<AgentListItemDto> result = new ArrayList<>();
+            LocalDate salaryMonth = YearMonth.now().minusMonths(1).atDay(1);
 
             for (Agent agent : agents) {
                 Long membersCount = session.createQuery("""
@@ -55,6 +57,22 @@ public class AgentQueryService {
                         .setParameter("agentId", agent.getId())
                         .uniqueResult();
 
+                BigDecimal currentSalary = session.createQuery("""
+                        select coalesce(sum(
+                            case
+                                when ct.direction = com.nexonsalary.model.CommissionDirection.DEBIT
+                                    then -ct.commissionAmount
+                                else ct.commissionAmount
+                            end
+                        ), 0)
+                        from CommissionTransaction ct
+                        where ct.agent.id = :agentId
+                          and ct.balanceDate = :salaryMonth
+                        """, BigDecimal.class)
+                        .setParameter("agentId", agent.getId())
+                        .setParameter("salaryMonth", salaryMonth)
+                        .uniqueResult();
+
                 result.add(new AgentListItemDto(
                         agent.getId(),
                         agent.getAgentCode(),
@@ -62,7 +80,8 @@ public class AgentQueryService {
                         membersCount != null ? membersCount : 0,
                         accountsCount != null ? accountsCount : 0,
                         totalAssets != null ? totalAssets : BigDecimal.ZERO,
-                        latestBalanceDate != null ? latestBalanceDate.toString() : ""
+                        latestBalanceDate != null ? latestBalanceDate.toString() : "",
+                        currentSalary != null ? currentSalary : BigDecimal.ZERO
                 ));
             }
 

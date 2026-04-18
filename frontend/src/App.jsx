@@ -5,6 +5,7 @@ import AgentsPage from "./pages/AgentsPage";
 import BalanceImportPage from "./pages/BalanceImportPage";
 import BalancesPage from "./pages/BalancesPage";
 import CommissionsPage from "./pages/CommissionsPage";
+import StatisticsPage from "./pages/StatisticsPage";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/balance-import" element={<BalanceImportPage />} />
         <Route path="/balances" element={<BalancesPage />} />
         <Route path="/commissions" element={<CommissionsPage />} />
+        <Route path="/statistics" element={<StatisticsPage />} />
       </Routes>
     </AppLayout>
   );

@@ -34,6 +34,10 @@ public class MonthlyMemberBalance {
     @JoinColumn(name = "account_id", nullable = false)
     private MemberAccount account;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "upload_id")
+    private BalanceUpload upload;
+
     @Column(name = "balance_date", nullable = false)
     private LocalDate balanceDate;
 
@@ -52,12 +56,14 @@ public class MonthlyMemberBalance {
     public MonthlyMemberBalance(Member member,
                                 Agent agent,
                                 MemberAccount account,
+                                BalanceUpload upload,
                                 LocalDate balanceDate,
                                 BigDecimal totalBalance,
                                 String sourceFileName) {
         this.member = member;
         this.agent = agent;
         this.account = account;
+        this.upload = upload;
         this.balanceDate = balanceDate;
         this.totalBalance = totalBalance;
         this.sourceFileName = sourceFileName;
@@ -94,6 +100,14 @@ public class MonthlyMemberBalance {
 
     public void setAccount(MemberAccount account) {
         this.account = account;
+    }
+
+    public BalanceUpload getUpload() {
+        return upload;
+    }
+
+    public void setUpload(BalanceUpload upload) {
+        this.upload = upload;
     }
 
     public LocalDate getBalanceDate() {

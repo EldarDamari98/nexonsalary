@@ -1,54 +1,79 @@
-package com.nexonsalary.dto;
+package com.nexonsalary.model;
 
-public class ImportResultDto {
+import jakarta.persistence.*;
 
-    private boolean success;
-    private Long uploadId;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "balance_uploads")
+public class BalanceUpload {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "file_name", nullable = false, length = 255)
+    private String fileName;
+
+    @Column(name = "uploaded_at", nullable = false)
+    private LocalDateTime uploadedAt;
+
+    @Column(name = "imported_rows", nullable = false)
     private int importedRows;
-    private int createdAgents;
-    private int createdMembers;
-    private int createdAccounts;
-    private int createdBalances;
-    private int updatedBalances;
-    private String message;
 
-    public ImportResultDto() {
+    @Column(name = "created_agents", nullable = false)
+    private int createdAgents;
+
+    @Column(name = "created_members", nullable = false)
+    private int createdMembers;
+
+    @Column(name = "created_accounts", nullable = false)
+    private int createdAccounts;
+
+    @Column(name = "created_balances", nullable = false)
+    private int createdBalances;
+
+    @Column(name = "updated_balances", nullable = false)
+    private int updatedBalances;
+
+    public BalanceUpload() {
     }
 
-    public ImportResultDto(boolean success,
-                           Long uploadId,
-                           int importedRows,
-                           int createdAgents,
-                           int createdMembers,
-                           int createdAccounts,
-                           int createdBalances,
-                           int updatedBalances,
-                           String message) {
-        this.success = success;
-        this.uploadId = uploadId;
+    public BalanceUpload(String fileName,
+                         int importedRows,
+                         int createdAgents,
+                         int createdMembers,
+                         int createdAccounts,
+                         int createdBalances,
+                         int updatedBalances) {
+        this.fileName = fileName;
         this.importedRows = importedRows;
         this.createdAgents = createdAgents;
         this.createdMembers = createdMembers;
         this.createdAccounts = createdAccounts;
         this.createdBalances = createdBalances;
         this.updatedBalances = updatedBalances;
-        this.message = message;
     }
 
-    public boolean isSuccess() {
-        return success;
+    @PrePersist
+    public void prePersist() {
+        this.uploadedAt = LocalDateTime.now();
     }
 
-    public void setSuccess(boolean success) {
-        this.success = success;
+    public Long getId() {
+        return id;
     }
 
-    public Long getUploadId() {
-        return uploadId;
+    public String getFileName() {
+        return fileName;
     }
 
-    public void setUploadId(Long uploadId) {
-        this.uploadId = uploadId;
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public LocalDateTime getUploadedAt() {
+        return uploadedAt;
     }
 
     public int getImportedRows() {
@@ -97,13 +122,5 @@ public class ImportResultDto {
 
     public void setUpdatedBalances(int updatedBalances) {
         this.updatedBalances = updatedBalances;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 }

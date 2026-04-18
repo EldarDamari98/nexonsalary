@@ -1,17 +1,12 @@
 package com.nexonsalary.controller;
 
-import com.nexonsalary.dto.BalanceListItemDto;
 import com.nexonsalary.dto.ImportResultDto;
 import com.nexonsalary.dto.ImportSummaryDto;
 import com.nexonsalary.dto.MonthlyMemberBalanceDto;
 import com.nexonsalary.service.BalanceQueryService;
 import com.nexonsalary.service.ExcelImportService;
 import com.nexonsalary.service.MonthlyBalanceService;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -20,6 +15,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Path("/balances")
@@ -41,11 +37,17 @@ public class BalanceImportController {
             if (uploadedInputStream == null || fileDetail == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity(new ImportResultDto(
-                                false, 0, 0, 0, 0, 0, 0,
+                                false, null, 0, 0, 0, 0, 0, 0,
                                 "No file uploaded"
                         ))
                         .build();
             }
+
+            // 🔥 FIX: convert filename to UTF-8
+            String fileName = new String(
+                    fileDetail.getFileName().getBytes("ISO-8859-1"),
+                    StandardCharsets.UTF_8
+            );
 
             tempFile = File.createTempFile("balances-", ".xlsx");
 
@@ -60,14 +62,13 @@ public class BalanceImportController {
 
             ImportSummaryDto summary = monthlyBalanceService.saveMonthlyBalances(
                     groupedBalances,
-                    fileDetail.getFileName()
+                    fileName
             );
-
-            int importedCount = summary.getCreatedBalances() + summary.getUpdatedBalances();
 
             return Response.ok(new ImportResultDto(
                     true,
-                    importedCount,
+                    summary.getUploadId(),
+                    summary.getImportedRows(),
                     summary.getCreatedAgents(),
                     summary.getCreatedMembers(),
                     summary.getCreatedAccounts(),
@@ -77,9 +78,11 @@ public class BalanceImportController {
             )).build();
 
         } catch (Exception e) {
+            e.printStackTrace();
+
             return Response.serverError()
                     .entity(new ImportResultDto(
-                            false, 0, 0, 0, 0, 0, 0,
+                            false, null, 0, 0, 0, 0, 0, 0,
                             "Upload failed: " + e.getMessage()
                     ))
                     .build();
@@ -93,13 +96,13 @@ public class BalanceImportController {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getBalances(
-            @jakarta.ws.rs.QueryParam("page") @jakarta.ws.rs.DefaultValue("1") int page,
-            @jakarta.ws.rs.QueryParam("size") @jakarta.ws.rs.DefaultValue("10") int size,
-            @jakarta.ws.rs.QueryParam("search") String search,
-            @jakarta.ws.rs.QueryParam("agent") String agent,
-            @jakarta.ws.rs.QueryParam("date") String date,
-            @jakarta.ws.rs.QueryParam("sortBy") @jakarta.ws.rs.DefaultValue("balanceDate") String sortBy,
-            @jakarta.ws.rs.QueryParam("sortDirection") @jakarta.ws.rs.DefaultValue("desc") String sortDirection
+            @QueryParam("page") @DefaultValue("1") int page,
+            @QueryParam("size") @DefaultValue("10") int size,
+            @QueryParam("search") String search,
+            @QueryParam("agent") String agent,
+            @QueryParam("date") String date,
+            @QueryParam("sortBy") @DefaultValue("balanceDate") String sortBy,
+            @QueryParam("sortDirection") @DefaultValue("desc") String sortDirection
     ) {
         try {
             return Response.ok(
@@ -116,6 +119,37 @@ public class BalanceImportController {
         } catch (Exception e) {
             return Response.serverError()
                     .entity("Failed to fetch balances: " + e.getMessage())
+                    .build();
+        }
+    }
+
+    @GET
+    @Path("/uploads")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUploads() {
+        try {
+            return Response.ok(monthlyBalanceService.getAllUploads()).build();
+        } catch (Exception e) {
+            return Response.serverError()
+                    .entity("Failed to fetch uploads: " + e.getMessage())
+                    .build();
+        }
+    }
+
+    @DELETE
+    @Path("/uploads/{uploadId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteUpload(@PathParam("uploadId") Long uploadId) {
+        try {
+            monthlyBalanceService.deleteUpload(uploadId);
+            return Response.ok("{\"message\":\"Upload deleted successfully\"}").build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("{\"message\":\"" + e.getMessage() + "\"}")
+                    .build();
+        } catch (Exception e) {
+            return Response.serverError()
+                    .entity("{\"message\":\"Failed to delete upload: " + e.getMessage() + "\"}")
                     .build();
         }
     }

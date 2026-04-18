@@ -22,7 +22,7 @@ public class CommissionController {
     public Response calculate(@QueryParam("month") String monthStr) {
         if (monthStr == null || monthStr.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"message\":\"month query param required (format: YYYY-MM-DD)\"}")
+                    .entity("{\"message\":\"month query param required (format: YYYY-MM)\"}")
                     .build();
         }
 
@@ -32,7 +32,7 @@ public class CommissionController {
             return Response.ok(result).build();
         } catch (DateTimeParseException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"message\":\"Invalid month format. Use YYYY-MM-DD\"}")
+                    .entity("{\"message\":\"Invalid month format. Use YYYY-MM\"}")
                     .build();
         } catch (IllegalArgumentException | IllegalStateException e) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -51,7 +51,7 @@ public class CommissionController {
     public Response recalculate(@QueryParam("month") String monthStr) {
         if (monthStr == null || monthStr.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"message\":\"month query param required (format: YYYY-MM-DD)\"}")
+                    .entity("{\"message\":\"month query param required (format: YYYY-MM)\"}")
                     .build();
         }
 
@@ -62,7 +62,7 @@ public class CommissionController {
             return Response.ok(result).build();
         } catch (DateTimeParseException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"message\":\"Invalid month format. Use YYYY-MM-DD\"}")
+                    .entity("{\"message\":\"Invalid month format. Use YYYY-MM\"}")
                     .build();
         } catch (Exception e) {
             return Response.serverError()
@@ -77,7 +77,7 @@ public class CommissionController {
     public Response getSummary(@QueryParam("month") String monthStr) {
         if (monthStr == null || monthStr.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"message\":\"month query param required (format: YYYY-MM-DD)\"}")
+                    .entity("{\"message\":\"month query param required (format: YYYY-MM)\"}")
                     .build();
         }
 
@@ -86,7 +86,7 @@ public class CommissionController {
             return Response.ok(queryService.getSummaryForMonth(month)).build();
         } catch (DateTimeParseException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"message\":\"Invalid month format. Use YYYY-MM-DD\"}")
+                    .entity("{\"message\":\"Invalid month format. Use YYYY-MM\"}")
                     .build();
         } catch (Exception e) {
             return Response.serverError()
@@ -99,10 +99,10 @@ public class CommissionController {
     @Path("/transactions")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getTransactions(@QueryParam("month") String monthStr,
-                                     @QueryParam("agentId") Long agentId) {
+                                    @QueryParam("agentId") Long agentId) {
         if (monthStr == null || monthStr.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"message\":\"month query param required (format: YYYY-MM-DD)\"}")
+                    .entity("{\"message\":\"month query param required (format: YYYY-MM)\"}")
                     .build();
         }
 
@@ -111,11 +111,81 @@ public class CommissionController {
             return Response.ok(queryService.getTransactionsForMonth(month, agentId)).build();
         } catch (DateTimeParseException e) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("{\"message\":\"Invalid month format. Use YYYY-MM-DD\"}")
+                    .entity("{\"message\":\"Invalid month format. Use YYYY-MM\"}")
                     .build();
         } catch (Exception e) {
             return Response.serverError()
                     .entity("{\"message\":\"Failed to fetch transactions: " + e.getMessage() + "\"}")
+                    .build();
+        }
+    }
+
+    @GET
+    @Path("/explorer-summary")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getExplorerSummary(@QueryParam("month") String monthStr,
+                                       @QueryParam("period") @DefaultValue("MONTH") String period,
+                                       @QueryParam("search") String search,
+                                       @QueryParam("agentId") Long agentId,
+                                       @QueryParam("reason") String reason,
+                                       @QueryParam("direction") String direction) {
+        try {
+            return Response.ok(
+                    queryService.getExplorerSummary(
+                            monthStr,
+                            period,
+                            search,
+                            agentId,
+                            reason,
+                            direction
+                    )
+            ).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"message\":\"" + e.getMessage() + "\"}")
+                    .build();
+        } catch (Exception e) {
+            return Response.serverError()
+                    .entity("{\"message\":\"Failed to fetch explorer summary: " + e.getMessage() + "\"}")
+                    .build();
+        }
+    }
+
+    @GET
+    @Path("/explorer-transactions")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getExplorerTransactions(@QueryParam("month") String monthStr,
+                                            @QueryParam("period") @DefaultValue("MONTH") String period,
+                                            @QueryParam("search") String search,
+                                            @QueryParam("agentId") Long agentId,
+                                            @QueryParam("reason") String reason,
+                                            @QueryParam("direction") String direction,
+                                            @QueryParam("page") @DefaultValue("1") int page,
+                                            @QueryParam("size") @DefaultValue("10") int size,
+                                            @QueryParam("sortBy") @DefaultValue("balanceDate") String sortBy,
+                                            @QueryParam("sortDirection") @DefaultValue("desc") String sortDirection) {
+        try {
+            return Response.ok(
+                    queryService.getExplorerTransactions(
+                            monthStr,
+                            period,
+                            search,
+                            agentId,
+                            reason,
+                            direction,
+                            page,
+                            size,
+                            sortBy,
+                            sortDirection
+                    )
+            ).build();
+        } catch (IllegalArgumentException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("{\"message\":\"" + e.getMessage() + "\"}")
+                    .build();
+        } catch (Exception e) {
+            return Response.serverError()
+                    .entity("{\"message\":\"Failed to fetch explorer transactions: " + e.getMessage() + "\"}")
                     .build();
         }
     }

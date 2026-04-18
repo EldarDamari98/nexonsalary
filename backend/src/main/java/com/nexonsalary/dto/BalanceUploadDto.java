@@ -1,8 +1,10 @@
 package com.nexonsalary.dto;
 
-public class ImportSummaryDto {
+public class BalanceUploadDto {
 
     private Long uploadId;
+    private String fileName;
+    private String uploadedAt;
     private int importedRows;
     private int createdAgents;
     private int createdMembers;
@@ -10,7 +12,27 @@ public class ImportSummaryDto {
     private int createdBalances;
     private int updatedBalances;
 
-    public ImportSummaryDto() {
+    public BalanceUploadDto() {
+    }
+
+    public BalanceUploadDto(Long uploadId,
+                            String fileName,
+                            String uploadedAt,
+                            int importedRows,
+                            int createdAgents,
+                            int createdMembers,
+                            int createdAccounts,
+                            int createdBalances,
+                            int updatedBalances) {
+        this.uploadId = uploadId;
+        this.fileName = fileName;
+        this.uploadedAt = uploadedAt;
+        this.importedRows = importedRows;
+        this.createdAgents = createdAgents;
+        this.createdMembers = createdMembers;
+        this.createdAccounts = createdAccounts;
+        this.createdBalances = createdBalances;
+        this.updatedBalances = updatedBalances;
     }
 
     public Long getUploadId() {
@@ -19,6 +41,22 @@ public class ImportSummaryDto {
 
     public void setUploadId(Long uploadId) {
         this.uploadId = uploadId;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public String getUploadedAt() {
+        return uploadedAt;
+    }
+
+    public void setUploadedAt(String uploadedAt) {
+        this.uploadedAt = uploadedAt;
     }
 
     public int getImportedRows() {

@@ -66,7 +66,7 @@ function AgentsPage() {
       <div className="page-header">
         <div>
           <h1>Agents Explorer</h1>
-          <p>View agents, linked members, accounts and managed assets</p>
+          <p>View agents, linked members, accounts, managed assets and current salary</p>
         </div>
 
         <div className="page-actions">
@@ -154,14 +154,15 @@ function AgentsPage() {
                   <th>Agent Name</th>
                   <th>Members</th>
                   <th>Accounts</th>
-                  <th>Total Assets</th>
+                  <th className="balances-number-header">Total Assets</th>
                   <th>Latest Balance Date</th>
+                  <th className="balances-number-header">Current Salary</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedAgents.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: "center", padding: "24px" }}>
+                    <td colSpan="7" style={{ textAlign: "center", padding: "24px" }}>
                       No agents found
                     </td>
                   </tr>
@@ -172,8 +173,22 @@ function AgentsPage() {
                       <td>{agent.agentName}</td>
                       <td>{agent.membersCount}</td>
                       <td>{agent.accountsCount}</td>
-                      <td>{formatCurrency(agent.totalAssets)}</td>
+                      <td className="balances-number-cell">
+                        ₪{formatCurrency(agent.totalAssets)}
+                      </td>
                       <td>{formatDate(agent.latestBalanceDate)}</td>
+                      <td
+                        className="balances-number-cell"
+                        style={{
+                          color:
+                            Number(agent.currentSalary || 0) < 0
+                              ? "#dc2626"
+                              : "#1f2937",
+                          fontWeight: 600,
+                        }}
+                      >
+                        ₪{formatCurrency(agent.currentSalary)}
+                      </td>
                     </tr>
                   ))
                 )}

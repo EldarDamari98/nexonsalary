@@ -5,6 +5,7 @@ import com.nexonsalary.util.HibernateUtil;
 import org.hibernate.Session;
 
 import java.math.BigDecimal;
+import java.time.YearMonth;
 
 public class DashboardQueryService {
 
@@ -30,11 +31,30 @@ public class DashboardQueryService {
                     from MonthlyMemberBalance b
                     """, BigDecimal.class).uniqueResult();
 
+            YearMonth lastClosedMonth = YearMonth.now().minusMonths(1);
+            var firstDayOfLastClosedMonth = lastClosedMonth.atDay(1);
+
+            BigDecimal currentMonthlySalary = session.createQuery("""
+                    select coalesce(sum(
+                        case
+                            when ct.direction = com.nexonsalary.model.CommissionDirection.DEBIT
+                                then -ct.commissionAmount
+                            else ct.commissionAmount
+                        end
+                    ), 0)
+                    from CommissionTransaction ct
+                    where ct.balanceDate = :month
+                    """, BigDecimal.class)
+                    .setParameter("month", firstDayOfLastClosedMonth)
+                    .uniqueResult();
+
             return new DashboardSummaryDto(
                     totalAgents != null ? totalAgents : 0,
                     totalMembers != null ? totalMembers : 0,
                     totalAccounts != null ? totalAccounts : 0,
-                    totalAssets != null ? totalAssets : BigDecimal.ZERO
+                    totalAssets != null ? totalAssets : BigDecimal.ZERO,
+                    currentMonthlySalary != null ? currentMonthlySalary : BigDecimal.ZERO,
+                    lastClosedMonth.toString()
             );
         }
     }

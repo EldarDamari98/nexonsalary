@@ -8,6 +8,8 @@ public class DashboardSummaryDto {
     private long totalMembers;
     private long totalAccounts;
     private BigDecimal totalAssets;
+    private BigDecimal currentMonthlySalary;
+    private String currentSalaryMonth;
 
     public DashboardSummaryDto() {
     }
@@ -15,11 +17,15 @@ public class DashboardSummaryDto {
     public DashboardSummaryDto(long totalAgents,
                                long totalMembers,
                                long totalAccounts,
-                               BigDecimal totalAssets) {
+                               BigDecimal totalAssets,
+                               BigDecimal currentMonthlySalary,
+                               String currentSalaryMonth) {
         this.totalAgents = totalAgents;
         this.totalMembers = totalMembers;
         this.totalAccounts = totalAccounts;
         this.totalAssets = totalAssets;
+        this.currentMonthlySalary = currentMonthlySalary;
+        this.currentSalaryMonth = currentSalaryMonth;
     }
 
     public long getTotalAgents() {
@@ -52,5 +58,21 @@ public class DashboardSummaryDto {
 
     public void setTotalAssets(BigDecimal totalAssets) {
         this.totalAssets = totalAssets;
+    }
+
+    public BigDecimal getCurrentMonthlySalary() {
+        return currentMonthlySalary;
+    }
+
+    public void setCurrentMonthlySalary(BigDecimal currentMonthlySalary) {
+        this.currentMonthlySalary = currentMonthlySalary;
+    }
+
+    public String getCurrentSalaryMonth() {
+        return currentSalaryMonth;
+    }
+
+    public void setCurrentSalaryMonth(String currentSalaryMonth) {
+        this.currentSalaryMonth = currentSalaryMonth;
     }
 }

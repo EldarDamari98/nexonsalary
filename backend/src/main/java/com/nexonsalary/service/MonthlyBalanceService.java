@@ -1,8 +1,10 @@
 package com.nexonsalary.service;
 
+import com.nexonsalary.dto.BalanceUploadListItemDto;
 import com.nexonsalary.dto.ImportSummaryDto;
 import com.nexonsalary.dto.MonthlyMemberBalanceDto;
 import com.nexonsalary.model.Agent;
+import com.nexonsalary.model.BalanceUpload;
 import com.nexonsalary.model.Member;
 import com.nexonsalary.model.MemberAccount;
 import com.nexonsalary.model.MonthlyMemberBalance;
@@ -23,6 +25,19 @@ public class MonthlyBalanceService {
         ImportSummaryDto summary = new ImportSummaryDto();
 
         try {
+            summary.setImportedRows(balances.size());
+
+            BalanceUpload upload = new BalanceUpload(
+                    sourceFileName,
+                    balances.size(),
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+            );
+            session.persist(upload);
+
             for (MonthlyMemberBalanceDto dto : balances) {
                 FindOrCreateAgentResult agentResult =
                         findOrCreateAgent(session, dto.getAgentCode(), dto.getAgentName());
@@ -56,6 +71,7 @@ public class MonthlyBalanceService {
                             memberResult.member(),
                             agentResult.agent(),
                             accountResult.account(),
+                            upload,
                             dto.getBalanceDate(),
                             dto.getTotalBalance(),
                             sourceFileName
@@ -67,12 +83,22 @@ public class MonthlyBalanceService {
                     existing.setMember(memberResult.member());
                     existing.setAgent(agentResult.agent());
                     existing.setAccount(accountResult.account());
+                    existing.setUpload(upload);
                     existing.setTotalBalance(dto.getTotalBalance());
                     existing.setSourceFileName(sourceFileName);
                     session.merge(existing);
                     summary.setUpdatedBalances(summary.getUpdatedBalances() + 1);
                 }
             }
+
+            upload.setCreatedAgents(summary.getCreatedAgents());
+            upload.setCreatedMembers(summary.getCreatedMembers());
+            upload.setCreatedAccounts(summary.getCreatedAccounts());
+            upload.setCreatedBalances(summary.getCreatedBalances());
+            upload.setUpdatedBalances(summary.getUpdatedBalances());
+            session.merge(upload);
+
+            summary.setUploadId(upload.getId());
 
             transaction.commit();
             return summary;
@@ -81,6 +107,57 @@ public class MonthlyBalanceService {
             if (transaction != null) {
                 transaction.rollback();
             }
+            throw e;
+        } finally {
+            session.close();
+        }
+    }
+
+    public List<BalanceUploadListItemDto> getAllUploads() {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            List<BalanceUpload> uploads = session.createQuery("""
+                    from BalanceUpload u
+                    order by u.uploadedAt desc, u.id desc
+                    """, BalanceUpload.class).getResultList();
+
+            return uploads.stream()
+                    .map(upload -> new BalanceUploadListItemDto(
+                            upload.getId(),
+                            upload.getFileName(),
+                            upload.getUploadedAt() != null ? upload.getUploadedAt().toString() : "",
+                            upload.getImportedRows(),
+                            upload.getCreatedAgents(),
+                            upload.getCreatedMembers(),
+                            upload.getCreatedAccounts(),
+                            upload.getCreatedBalances(),
+                            upload.getUpdatedBalances()
+                    ))
+                    .toList();
+        }
+    }
+
+    public void deleteUpload(Long uploadId) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Transaction transaction = session.beginTransaction();
+
+        try {
+            BalanceUpload upload = session.find(BalanceUpload.class, uploadId);
+            if (upload == null) {
+                throw new IllegalArgumentException("Upload not found");
+            }
+
+            session.createMutationQuery("""
+                    delete from MonthlyMemberBalance
+                    where upload.id = :uploadId
+                    """)
+                    .setParameter("uploadId", uploadId)
+                    .executeUpdate();
+
+            session.remove(upload);
+
+            transaction.commit();
+        } catch (Exception e) {
+            transaction.rollback();
             throw e;
         } finally {
             session.close();

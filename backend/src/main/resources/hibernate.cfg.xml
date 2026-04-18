@@ -21,5 +21,6 @@
         <mapping class="com.nexonsalary.model.MonthlyMemberBalance"/>
         <mapping class="com.nexonsalary.model.CommissionTransaction"/>
         <mapping class="com.nexonsalary.model.ClientAgentHistory"/>
+        <mapping class="com.nexonsalary.model.BalanceUpload"/>
     </session-factory>
 </hibernate-configuration>

@@ -7,6 +7,8 @@ function DashboardPage() {
     totalMembers: 0,
     totalAccounts: 0,
     totalAssets: 0,
+    currentMonthlySalary: 0,
+    currentSalaryMonth: "",
   });
 
   const [loading, setLoading] = useState(true);
@@ -59,7 +61,27 @@ function DashboardPage() {
 
         <div className="stat-card">
           <p className="stat-card-title">Total Assets</p>
-          <h3 className="stat-card-value">{formatCurrency(summary.totalAssets)}</h3>
+          <h3 className="stat-card-value">
+            ₪{formatCurrency(summary.totalAssets)}
+          </h3>
+        </div>
+
+        <div className="stat-card">
+          <p className="stat-card-title">
+            Current Monthly Salary
+            {summary.currentSalaryMonth ? ` (${summary.currentSalaryMonth})` : ""}
+          </p>
+          <h3
+            className="stat-card-value"
+            style={{
+              color:
+                Number(summary.currentMonthlySalary || 0) < 0
+                  ? "#dc2626"
+                  : "#1f2937",
+            }}
+          >
+            ₪{formatCurrency(summary.currentMonthlySalary)}
+          </h3>
         </div>
       </div>
 
@@ -67,7 +89,8 @@ function DashboardPage() {
         <h3>System Summary</h3>
         <p>
           This dashboard shows the current totals across imported agents, members,
-          accounts and balances
+          accounts, balances and the current monthly salary based on the last
+          closed month
         </p>
       </div>
     </div>

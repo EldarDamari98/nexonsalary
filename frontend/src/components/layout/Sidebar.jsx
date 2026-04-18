@@ -50,6 +50,9 @@ function Sidebar() {
         >
           Commissions
         </NavLink>
+        <NavLink to="/statistics" className="sidebar-link">
+          Statistics
+        </NavLink>
       </nav>
     </aside>
   );

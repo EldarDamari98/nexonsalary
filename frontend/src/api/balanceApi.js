@@ -45,3 +45,32 @@ export async function getBalances({
 
   return response.json();
 }
+
+export async function getBalanceUploads() {
+  const response = await fetch(`${BASE_URL}/uploads`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch balance uploads");
+  }
+
+  return response.json();
+}
+
+export async function deleteBalanceUpload(uploadId) {
+  const response = await fetch(`${BASE_URL}/uploads/${uploadId}`, {
+    method: "DELETE",
+  });
+
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to delete upload");
+  }
+
+  return data;
+}

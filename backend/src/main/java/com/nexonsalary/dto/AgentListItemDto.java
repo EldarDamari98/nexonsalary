@@ -11,6 +11,7 @@ public class AgentListItemDto {
     private long accountsCount;
     private BigDecimal totalAssets;
     private String latestBalanceDate;
+    private BigDecimal currentSalary;
 
     public AgentListItemDto() {
     }
@@ -21,7 +22,8 @@ public class AgentListItemDto {
                             long membersCount,
                             long accountsCount,
                             BigDecimal totalAssets,
-                            String latestBalanceDate) {
+                            String latestBalanceDate,
+                            BigDecimal currentSalary) {
         this.agentId = agentId;
         this.agentCode = agentCode;
         this.agentName = agentName;
@@ -29,6 +31,7 @@ public class AgentListItemDto {
         this.accountsCount = accountsCount;
         this.totalAssets = totalAssets;
         this.latestBalanceDate = latestBalanceDate;
+        this.currentSalary = currentSalary;
     }
 
     public Long getAgentId() {
@@ -85,5 +88,13 @@ public class AgentListItemDto {
 
     public void setLatestBalanceDate(String latestBalanceDate) {
         this.latestBalanceDate = latestBalanceDate;
+    }
+
+    public BigDecimal getCurrentSalary() {
+        return currentSalary;
+    }
+
+    public void setCurrentSalary(BigDecimal currentSalary) {
+        this.currentSalary = currentSalary;
     }
 }

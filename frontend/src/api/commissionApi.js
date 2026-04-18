@@ -52,3 +52,69 @@ export async function getCommissionTransactions(month, agentId) {
 
   return response.json();
 }
+
+export async function getCommissionExplorerSummary({
+  month = "",
+  period = "MONTH",
+  search = "",
+  agentId = "",
+  reason = "",
+  direction = "",
+} = {}) {
+  const params = new URLSearchParams({
+    period,
+    search,
+    reason,
+    direction,
+  });
+
+  if (month) params.append("month", month);
+  if (agentId) params.append("agentId", String(agentId));
+
+  const response = await fetch(`${BASE_URL}/explorer-summary?${params.toString()}`);
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || "Failed to fetch explorer summary");
+  }
+
+  return response.json();
+}
+
+export async function getCommissionExplorerTransactions({
+  month = "",
+  period = "MONTH",
+  search = "",
+  agentId = "",
+  reason = "",
+  direction = "",
+  page = 1,
+  size = 10,
+  sortBy = "balanceDate",
+  sortDirection = "desc",
+} = {}) {
+  const params = new URLSearchParams({
+    period,
+    search,
+    reason,
+    direction,
+    page: String(page),
+    size: String(size),
+    sortBy,
+    sortDirection,
+  });
+
+  if (month) params.append("month", month);
+  if (agentId) params.append("agentId", String(agentId));
+
+  const response = await fetch(
+    `${BASE_URL}/explorer-transactions?${params.toString()}`
+  );
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || "Failed to fetch explorer transactions");
+  }
+
+  return response.json();
+}
