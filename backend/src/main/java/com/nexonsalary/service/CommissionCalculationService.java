@@ -134,21 +134,6 @@ public class CommissionCalculationService {
         BigDecimal delta = current.getTotalBalance().subtract(previous.getTotalBalance());
 
         ClientAgentHistory history = findActiveHistory(session, current.getAccount().getId(), current.getAgent().getId());
-        int txCount = 0;
-
-        // Scope only on positive delta (new money brought in)
-        if (delta.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal scopeAmount = calcScope(delta);
-            if (history != null) {
-                history.setTotalScopePaid(history.getTotalScopePaid().add(scopeAmount));
-                session.merge(history);
-            }
-            persistTransaction(session, current, month, previous.getTotalBalance(), current.getTotalBalance(),
-                    delta, CommissionRates.SCOPE_RATE, scopeAmount,
-                    CommissionDirection.CREDIT, CommissionReason.SCOPE_DELTA);
-            result.setTotalScopeDelta(result.getTotalScopeDelta().add(scopeAmount));
-            txCount++;
-        }
 
         // Nifra always on current balance
         BigDecimal nifraAmount = calcNifra(current.getTotalBalance());
@@ -156,10 +141,8 @@ public class CommissionCalculationService {
                 delta, CommissionRates.NIFRA_RATE, nifraAmount,
                 CommissionDirection.CREDIT, CommissionReason.NIFRA);
         result.setTotalNifra(result.getTotalNifra().add(nifraAmount));
-        txCount++;
-
         result.setExistingClients(result.getExistingClients() + 1);
-        result.setTransactionCount(result.getTransactionCount() + txCount);
+        result.setTransactionCount(result.getTransactionCount() + 1);
     }
 
     private void handleAgentTransfer(Session session, MonthlyMemberBalance current,
