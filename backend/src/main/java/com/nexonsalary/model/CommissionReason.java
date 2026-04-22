@@ -1,8 +1,8 @@
 package com.nexonsalary.model;
 
 public enum CommissionReason {
-    SCOPE_NEW,
-    SCOPE_DELTA,
-    SCOPE_CLAWBACK,
-    NIFRA
+    PERIMETER_FEE_NEW,
+    PERIMETER_FEE_DELTA,
+    PERIMETER_FEE_CLAWBACK,
+    TRAIL_COMMISSION
 }

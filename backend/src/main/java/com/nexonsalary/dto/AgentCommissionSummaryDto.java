@@ -7,18 +7,18 @@ public class AgentCommissionSummaryDto {
     private Long agentId;
     private String agentCode;
     private String agentName;
-    private BigDecimal scopeNew;
-    private BigDecimal scopeDelta;
+    private BigDecimal perimeterFeeNew;
+    private BigDecimal perimeterFeeDelta;
     private BigDecimal clawbacks;
-    private BigDecimal nifra;
+    private BigDecimal trailCommission;
     private BigDecimal netCommission;
     private int transactionCount;
 
     public AgentCommissionSummaryDto() {
-        this.scopeNew = BigDecimal.ZERO;
-        this.scopeDelta = BigDecimal.ZERO;
+        this.perimeterFeeNew = BigDecimal.ZERO;
+        this.perimeterFeeDelta = BigDecimal.ZERO;
         this.clawbacks = BigDecimal.ZERO;
-        this.nifra = BigDecimal.ZERO;
+        this.trailCommission = BigDecimal.ZERO;
         this.netCommission = BigDecimal.ZERO;
     }
 
@@ -31,17 +31,17 @@ public class AgentCommissionSummaryDto {
     public String getAgentName() { return agentName; }
     public void setAgentName(String agentName) { this.agentName = agentName; }
 
-    public BigDecimal getScopeNew() { return scopeNew; }
-    public void setScopeNew(BigDecimal scopeNew) { this.scopeNew = scopeNew; }
+    public BigDecimal getPerimeterFeeNew() { return perimeterFeeNew; }
+    public void setPerimeterFeeNew(BigDecimal perimeterFeeNew) { this.perimeterFeeNew = perimeterFeeNew; }
 
-    public BigDecimal getScopeDelta() { return scopeDelta; }
-    public void setScopeDelta(BigDecimal scopeDelta) { this.scopeDelta = scopeDelta; }
+    public BigDecimal getPerimeterFeeDelta() { return perimeterFeeDelta; }
+    public void setPerimeterFeeDelta(BigDecimal perimeterFeeDelta) { this.perimeterFeeDelta = perimeterFeeDelta; }
 
     public BigDecimal getClawbacks() { return clawbacks; }
     public void setClawbacks(BigDecimal clawbacks) { this.clawbacks = clawbacks; }
 
-    public BigDecimal getNifra() { return nifra; }
-    public void setNifra(BigDecimal nifra) { this.nifra = nifra; }
+    public BigDecimal getTrailCommission() { return trailCommission; }
+    public void setTrailCommission(BigDecimal trailCommission) { this.trailCommission = trailCommission; }
 
     public BigDecimal getNetCommission() { return netCommission; }
     public void setNetCommission(BigDecimal netCommission) { this.netCommission = netCommission; }

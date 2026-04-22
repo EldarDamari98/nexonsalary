@@ -38,7 +38,7 @@ public class ClientAgentHistory {
 
     // Running total of scope commissions paid for this (account, agent) stint — used for clawback
     @Column(name = "total_scope_paid", nullable = false, precision = 18, scale = 2)
-    private BigDecimal totalScopePaid = BigDecimal.ZERO;
+    private BigDecimal totalPerimeterFeePaid = BigDecimal.ZERO;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -50,13 +50,13 @@ public class ClientAgentHistory {
     }
 
     public ClientAgentHistory(MemberAccount account, Agent agent, Member member,
-                               LocalDate firstAppearanceDate, BigDecimal initialScopePaid) {
+                               LocalDate firstAppearanceDate, BigDecimal initialPerimeterFeePaid) {
         this.account = account;
         this.agent = agent;
         this.member = member;
         this.firstAppearanceDate = firstAppearanceDate;
         this.status = ClientStatus.ACTIVE;
-        this.totalScopePaid = initialScopePaid;
+        this.totalPerimeterFeePaid = initialPerimeterFeePaid;
     }
 
     @PrePersist
@@ -90,8 +90,8 @@ public class ClientAgentHistory {
     public ClientStatus getStatus() { return status; }
     public void setStatus(ClientStatus status) { this.status = status; }
 
-    public BigDecimal getTotalScopePaid() { return totalScopePaid; }
-    public void setTotalScopePaid(BigDecimal totalScopePaid) { this.totalScopePaid = totalScopePaid; }
+    public BigDecimal getTotalPerimeterFeePaid() { return totalPerimeterFeePaid; }
+    public void setTotalPerimeterFeePaid(BigDecimal totalPerimeterFeePaid) { this.totalPerimeterFeePaid = totalPerimeterFeePaid; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

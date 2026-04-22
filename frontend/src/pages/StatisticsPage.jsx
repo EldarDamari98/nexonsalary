@@ -239,10 +239,10 @@ function fmtInt(value) {
 
 function formatReason(reason) {
   const map = {
-    SCOPE_NEW: "Scope New",
-    SCOPE_DELTA: "Scope Delta",
-    SCOPE_CLAWBACK: "Clawback",
-    NIFRA: "Nifra",
+    PERIMETER_FEE_NEW: "Perimeter Fee New",
+    PERIMETER_FEE_DELTA: "Perimeter Fee Delta",
+    PERIMETER_FEE_CLAWBACK: "Clawback",
+    TRAIL_COMMISSION: "Trail Commission",
   };
 
   return map[reason] || reason;

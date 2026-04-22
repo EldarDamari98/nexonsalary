@@ -84,9 +84,9 @@ public class CommissionCalculationService {
             }
 
             result.setNetCommission(
-                    result.getTotalScopeNew()
-                            .add(result.getTotalScopeDelta())
-                            .add(result.getTotalNifra())
+                    result.getTotalPerimeterFeeNew()
+                            .add(result.getTotalPerimeterFeeDelta())
+                            .add(result.getTotalTrailCommission())
                             .subtract(result.getTotalClawbacks())
             );
             result.setMessage("Commission calculated successfully for " + month);
@@ -106,25 +106,25 @@ public class CommissionCalculationService {
 
     private void handleNewClient(Session session, MonthlyMemberBalance current,
                                   LocalDate month, CommissionCalculationResultDto result) {
-        BigDecimal scopeAmount = calcScope(current.getTotalBalance());
-        BigDecimal nifraAmount = calcNifra(current.getTotalBalance());
+        BigDecimal perimeterFeeAmount = calcPerimeterFee(current.getTotalBalance());
+        BigDecimal trailCommissionAmount = calcTrailCommission(current.getTotalBalance());
 
         ClientAgentHistory history = new ClientAgentHistory(
-                current.getAccount(), current.getAgent(), current.getMember(), month, scopeAmount
+                current.getAccount(), current.getAgent(), current.getMember(), month, perimeterFeeAmount
         );
         session.persist(history);
 
         persistTransaction(session, current, month, BigDecimal.ZERO, current.getTotalBalance(),
-                current.getTotalBalance(), CommissionRates.SCOPE_RATE, scopeAmount,
-                CommissionDirection.CREDIT, CommissionReason.SCOPE_NEW);
+                current.getTotalBalance(), CommissionRates.PERIMETER_FEE_RATE, perimeterFeeAmount,
+                CommissionDirection.CREDIT, CommissionReason.PERIMETER_FEE_NEW);
 
         persistTransaction(session, current, month, BigDecimal.ZERO, current.getTotalBalance(),
-                BigDecimal.ZERO, CommissionRates.NIFRA_RATE, nifraAmount,
-                CommissionDirection.CREDIT, CommissionReason.NIFRA);
+                BigDecimal.ZERO, CommissionRates.TRAIL_COMMISSION_RATE, trailCommissionAmount,
+                CommissionDirection.CREDIT, CommissionReason.TRAIL_COMMISSION);
 
         result.setNewClients(result.getNewClients() + 1);
-        result.setTotalScopeNew(result.getTotalScopeNew().add(scopeAmount));
-        result.setTotalNifra(result.getTotalNifra().add(nifraAmount));
+        result.setTotalPerimeterFeeNew(result.getTotalPerimeterFeeNew().add(perimeterFeeAmount));
+        result.setTotalTrailCommission(result.getTotalTrailCommission().add(trailCommissionAmount));
         result.setTransactionCount(result.getTransactionCount() + 2);
     }
 
@@ -136,11 +136,11 @@ public class CommissionCalculationService {
         ClientAgentHistory history = findActiveHistory(session, current.getAccount().getId(), current.getAgent().getId());
 
         // Nifra always on current balance
-        BigDecimal nifraAmount = calcNifra(current.getTotalBalance());
+        BigDecimal trailCommissionAmount = calcTrailCommission(current.getTotalBalance());
         persistTransaction(session, current, month, previous.getTotalBalance(), current.getTotalBalance(),
-                delta, CommissionRates.NIFRA_RATE, nifraAmount,
-                CommissionDirection.CREDIT, CommissionReason.NIFRA);
-        result.setTotalNifra(result.getTotalNifra().add(nifraAmount));
+                delta, CommissionRates.TRAIL_COMMISSION_RATE, trailCommissionAmount,
+                CommissionDirection.CREDIT, CommissionReason.TRAIL_COMMISSION);
+        result.setTotalTrailCommission(result.getTotalTrailCommission().add(trailCommissionAmount));
         result.setExistingClients(result.getExistingClients() + 1);
         result.setTransactionCount(result.getTransactionCount() + 1);
     }
@@ -184,7 +184,7 @@ public class CommissionCalculationService {
         }
 
         if (clawbackRate.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal clawbackAmount = history.getTotalScopePaid()
+            BigDecimal clawbackAmount = history.getTotalPerimeterFeePaid()
                     .multiply(clawbackRate)
                     .setScale(2, RoundingMode.HALF_UP);
 
@@ -192,7 +192,7 @@ public class CommissionCalculationService {
                     lastBalance.getTotalBalance(), BigDecimal.ZERO,
                     lastBalance.getTotalBalance().negate(),
                     clawbackRate, clawbackAmount,
-                    CommissionDirection.DEBIT, CommissionReason.SCOPE_CLAWBACK);
+                    CommissionDirection.DEBIT, CommissionReason.PERIMETER_FEE_CLAWBACK);
             session.persist(clawbackTx);
 
             result.setTotalClawbacks(result.getTotalClawbacks().add(clawbackAmount));
@@ -232,12 +232,14 @@ public class CommissionCalculationService {
         return tx;
     }
 
-    private BigDecimal calcScope(BigDecimal amount) {
-        return amount.multiply(CommissionRates.SCOPE_RATE).setScale(2, RoundingMode.HALF_UP);
+    private BigDecimal calcPerimeterFee(BigDecimal amount) {
+        return amount.multiply(CommissionRates.PERIMETER_FEE_RATE).setScale(2, RoundingMode.HALF_UP);
     }
 
-    private BigDecimal calcNifra(BigDecimal amount) {
-        return amount.multiply(CommissionRates.NIFRA_RATE).setScale(2, RoundingMode.HALF_UP);
+
+    private BigDecimal calcTrailCommission(BigDecimal amount) {
+
+        return amount.multiply(CommissionRates.TRAIL_COMMISSION_RATE).setScale(2, RoundingMode.HALF_UP);
     }
 
     // --- Queries ---

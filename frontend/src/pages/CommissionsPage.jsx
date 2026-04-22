@@ -111,12 +111,26 @@ function CommissionsPage() {
         }),
       ]);
 
-      setSummary(summaryData || []);
-      setTransactions(transactionsData.items || []);
+      const items = transactionsData.items || [];
+      const agents = summaryData || [];
+
+      if (agents.length === 0 && items.length === 0) {
+        setResultsError("No commission data found for this month. Calculate first.");
+        setResultsVisible(false);
+        setSummary([]);
+        setTransactions([]);
+        setTransactionsTotalItems(0);
+        setTransactionsTotalPages(1);
+        return;
+      }
+
+      setSummary(agents);
+      setTransactions(items);
       setTransactionsTotalItems(transactionsData.totalItems || 0);
       setTransactionsTotalPages(transactionsData.totalPages || 1);
     } catch (err) {
       setResultsError(err.message || "Failed to load results");
+      setResultsVisible(false);
       setSummary([]);
       setTransactions([]);
       setTransactionsTotalItems(0);
@@ -221,19 +235,19 @@ function CommissionsPage() {
   const explorerTotals = useMemo(() => {
     return summary.reduce(
       (acc, row) => {
-        acc.scopeNew += Number(row.scopeNew || 0);
-        acc.scopeDelta += Number(row.scopeDelta || 0);
+        acc.perimeterFeeNew += Number(row.perimeterFeeNew || 0);
+        acc.perimeterFeeDelta += Number(row.perimeterFeeDelta || 0);
         acc.clawbacks += Number(row.clawbacks || 0);
-        acc.nifra += Number(row.nifra || 0);
+        acc.trailCommission += Number(row.trailCommission || 0);
         acc.netCommission += Number(row.netCommission || 0);
         acc.transactionCount += Number(row.transactionCount || 0);
         return acc;
       },
       {
-        scopeNew: 0,
-        scopeDelta: 0,
+        perimeterFeeNew: 0,
+        perimeterFeeDelta: 0,
         clawbacks: 0,
-        nifra: 0,
+        trailCommission: 0,
         netCommission: 0,
         transactionCount: 0,
       }
@@ -348,16 +362,16 @@ function CommissionsPage() {
               </div>
 
               <div className="stat-card">
-                <p className="stat-card-title">Scope (New)</p>
+                <p className="stat-card-title">Perimeter Fee (New)</p>
                 <h3 className="stat-card-value">
-                  {fmt(calcResult.totalScopeNew)}
+                  {fmt(calcResult.totalPerimeterFeeNew)}
                 </h3>
               </div>
 
               <div className="stat-card">
-                <p className="stat-card-title">Scope (Delta)</p>
+                <p className="stat-card-title">Perimeter Fee (Delta)</p>
                 <h3 className="stat-card-value">
-                  {fmt(calcResult.totalScopeDelta)}
+                  {fmt(calcResult.totalPerimeterFeeDelta)}
                 </h3>
               </div>
 
@@ -369,8 +383,8 @@ function CommissionsPage() {
               </div>
 
               <div className="stat-card">
-                <p className="stat-card-title">Nifra</p>
-                <h3 className="stat-card-value">{fmt(calcResult.totalNifra)}</h3>
+                <p className="stat-card-title">Trail Commission</p>
+                <h3 className="stat-card-value">{fmt(calcResult.totalTrailCommission)}</h3>
               </div>
 
               <div className="stat-card">
@@ -384,6 +398,10 @@ function CommissionsPage() {
         )}
       </div>
 
+      {!resultsVisible && resultsError && (
+        <p style={{ color: "#dc2626" }}>{resultsError}</p>
+      )}
+
       {resultsVisible && (
         <>
           <div className="card" style={{ marginBottom: "24px" }}>
@@ -394,7 +412,6 @@ function CommissionsPage() {
               </p>
             </div>
 
-<<<<<<< HEAD
             <div className="balances-filters">
               <input
                 className="input"
@@ -406,48 +423,6 @@ function CommissionsPage() {
                   setCurrentPage(1);
                 }}
               />
-=======
-      {noResults && !resultsError && (
-        <p style={{ color: "#6b7280", marginBottom: "16px" }}>
-          No commission data found for this month. Calculate first.
-        </p>
-      )}
-
-      {/* Summary per agent */}
-      {summary.length > 0 && (
-        <div className="card" style={{ marginBottom: "24px" }}>
-          <h2 style={{ margin: "0 0 16px" }}>Summary by Agent</h2>
-          <div style={{ overflowX: "auto" }}>
-            <table className="simple-table">
-              <thead>
-                <tr>
-                  <th>Agent</th>
-                  <th style={{ textAlign: "right" }}>Scope New</th>
-                  <th style={{ textAlign: "right" }}>Scope Delta</th>
-                  <th style={{ textAlign: "right" }}>Clawbacks</th>
-                  <th style={{ textAlign: "right" }}>Nifra</th>
-                  <th style={{ textAlign: "right" }}>Net Commission</th>
-                  <th style={{ textAlign: "right" }}>Transactions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {summary.map((row) => (
-                  <tr key={row.agentId}>
-                    <td>{row.agentName} <span style={{ color: "#6b7280", fontSize: "12px" }}>({row.agentCode})</span></td>
-                    <td style={{ textAlign: "right" }}>{fmt(row.scopeNew)}</td>
-                    <td style={{ textAlign: "right" }}>{fmt(row.scopeDelta)}</td>
-                    <td style={{ textAlign: "right", color: "#dc2626" }}>-{fmt(row.clawbacks)}</td>
-                    <td style={{ textAlign: "right" }}>{fmt(row.nifra)}</td>
-                    <td style={{ textAlign: "right", fontWeight: 600 }}>{fmt(row.netCommission)}</td>
-                    <td style={{ textAlign: "right" }}>{row.transactionCount}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
->>>>>>> 049b808 (feat: improve commission calculation error handling and add empty state messaging for missing data)
 
               <select
                 className="input"
@@ -489,10 +464,10 @@ function CommissionsPage() {
                 }}
               >
                 <option value="">All reasons</option>
-                <option value="SCOPE_NEW">Scope New</option>
-                <option value="SCOPE_DELTA">Scope Delta</option>
-                <option value="SCOPE_CLAWBACK">Clawback</option>
-                <option value="NIFRA">Nifra</option>
+                <option value="PERIMETER_FEE_NEW">Perimeter Fee New</option>
+                <option value="PERIMETER_FEE_DELTA">Perimeter Fee Delta</option>
+                <option value="PERIMETER_FEE_CLAWBACK">Clawback</option>
+                <option value="TRAIL_COMMISSION">Trail Commission</option>
               </select>
 
               <select
@@ -586,10 +561,10 @@ function CommissionsPage() {
                   <thead>
                     <tr>
                       <th>Agent</th>
-                      <th style={{ textAlign: "right" }}>Scope New</th>
-                      <th style={{ textAlign: "right" }}>Scope Delta</th>
+                      <th style={{ textAlign: "right" }}>Perimeter Fee New</th>
+                      <th style={{ textAlign: "right" }}>Perimeter Fee Delta</th>
                       <th style={{ textAlign: "right" }}>Clawbacks</th>
-                      <th style={{ textAlign: "right" }}>Nifra</th>
+                      <th style={{ textAlign: "right" }}>Trail Commission</th>
                       <th style={{ textAlign: "right" }}>Net Commission</th>
                       <th style={{ textAlign: "right" }}>Transactions</th>
                     </tr>
@@ -604,15 +579,15 @@ function CommissionsPage() {
                           </span>
                         </td>
                         <td style={{ textAlign: "right" }}>
-                          {fmt(row.scopeNew)}
+                          {fmt(row.perimeterFeeNew)}
                         </td>
                         <td style={{ textAlign: "right" }}>
-                          {fmt(row.scopeDelta)}
+                          {fmt(row.perimeterFeeDelta)}
                         </td>
                         <td style={{ textAlign: "right", color: "#dc2626" }}>
                           -{fmt(row.clawbacks)}
                         </td>
-                        <td style={{ textAlign: "right" }}>{fmt(row.nifra)}</td>
+                        <td style={{ textAlign: "right" }}>{fmt(row.trailCommission)}</td>
                         <td style={{ textAlign: "right", fontWeight: 600 }}>
                           {fmt(row.netCommission)}
                         </td>
@@ -780,10 +755,10 @@ function fmt(value) {
 
 function formatReason(reason) {
   const map = {
-    SCOPE_NEW: "Scope New",
-    SCOPE_DELTA: "Scope Delta",
-    SCOPE_CLAWBACK: "Clawback",
-    NIFRA: "Nifra",
+    PERIMETER_FEE_NEW: "Perimeter Fee New",
+    PERIMETER_FEE_DELTA: "Perimeter Fee Delta",
+    PERIMETER_FEE_CLAWBACK: "Clawback",
+    TRAIL_COMMISSION: "Trail Commission",
   };
 
   return map[reason] || reason;

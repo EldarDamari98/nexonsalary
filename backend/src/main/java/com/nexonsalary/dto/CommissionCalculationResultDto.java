@@ -8,19 +8,19 @@ public class CommissionCalculationResultDto {
     private int existingClients;
     private int leftClients;
     private int transferredClients;
-    private BigDecimal totalScopeNew;
-    private BigDecimal totalScopeDelta;
+    private BigDecimal totalPerimeterFeeNew;
+    private BigDecimal totalPerimeterFeeDelta;
     private BigDecimal totalClawbacks;
-    private BigDecimal totalNifra;
+    private BigDecimal totalTrailCommission;
     private BigDecimal netCommission;
     private int transactionCount;
     private String message;
 
     public CommissionCalculationResultDto() {
-        this.totalScopeNew = BigDecimal.ZERO;
-        this.totalScopeDelta = BigDecimal.ZERO;
+        this.totalPerimeterFeeNew = BigDecimal.ZERO;
+        this.totalPerimeterFeeDelta = BigDecimal.ZERO;
         this.totalClawbacks = BigDecimal.ZERO;
-        this.totalNifra = BigDecimal.ZERO;
+        this.totalTrailCommission = BigDecimal.ZERO;
         this.netCommission = BigDecimal.ZERO;
     }
 
@@ -36,17 +36,17 @@ public class CommissionCalculationResultDto {
     public int getTransferredClients() { return transferredClients; }
     public void setTransferredClients(int transferredClients) { this.transferredClients = transferredClients; }
 
-    public BigDecimal getTotalScopeNew() { return totalScopeNew; }
-    public void setTotalScopeNew(BigDecimal totalScopeNew) { this.totalScopeNew = totalScopeNew; }
+    public BigDecimal getTotalPerimeterFeeNew() { return totalPerimeterFeeNew; }
+    public void setTotalPerimeterFeeNew(BigDecimal totalPerimeterFeeNew) { this.totalPerimeterFeeNew = totalPerimeterFeeNew; }
 
-    public BigDecimal getTotalScopeDelta() { return totalScopeDelta; }
-    public void setTotalScopeDelta(BigDecimal totalScopeDelta) { this.totalScopeDelta = totalScopeDelta; }
+    public BigDecimal getTotalPerimeterFeeDelta() { return totalPerimeterFeeDelta; }
+    public void setTotalPerimeterFeeDelta(BigDecimal totalPerimeterFeeDelta) { this.totalPerimeterFeeDelta = totalPerimeterFeeDelta; }
 
     public BigDecimal getTotalClawbacks() { return totalClawbacks; }
     public void setTotalClawbacks(BigDecimal totalClawbacks) { this.totalClawbacks = totalClawbacks; }
 
-    public BigDecimal getTotalNifra() { return totalNifra; }
-    public void setTotalNifra(BigDecimal totalNifra) { this.totalNifra = totalNifra; }
+    public BigDecimal getTotalTrailCommission() { return totalTrailCommission; }
+    public void setTotalTrailCommission(BigDecimal totalTrailCommission) { this.totalTrailCommission = totalTrailCommission; }
 
     public BigDecimal getNetCommission() { return netCommission; }
     public void setNetCommission(BigDecimal netCommission) { this.netCommission = netCommission; }

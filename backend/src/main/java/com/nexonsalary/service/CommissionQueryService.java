@@ -156,14 +156,14 @@ public class CommissionQueryService {
             BigDecimal amount = tx.getCommissionAmount();
             CommissionReason txReason = tx.getReason();
 
-            if (txReason == CommissionReason.SCOPE_NEW) {
-                summary.setScopeNew(summary.getScopeNew().add(amount));
-            } else if (txReason == CommissionReason.SCOPE_DELTA) {
-                summary.setScopeDelta(summary.getScopeDelta().add(amount));
-            } else if (txReason == CommissionReason.SCOPE_CLAWBACK) {
+            if (txReason == CommissionReason.PERIMETER_FEE_NEW) {
+                summary.setPerimeterFeeNew(summary.getPerimeterFeeNew().add(amount));
+            } else if (txReason == CommissionReason.PERIMETER_FEE_DELTA) {
+                summary.setPerimeterFeeDelta(summary.getPerimeterFeeDelta().add(amount));
+            } else if (txReason == CommissionReason.PERIMETER_FEE_CLAWBACK) {
                 summary.setClawbacks(summary.getClawbacks().add(amount));
-            } else if (txReason == CommissionReason.NIFRA) {
-                summary.setNifra(summary.getNifra().add(amount));
+            } else if (txReason == CommissionReason.TRAIL_COMMISSION) {
+                summary.setTrailCommission(summary.getTrailCommission().add(amount));
             }
 
             summary.setTransactionCount(summary.getTransactionCount() + 1);
@@ -171,9 +171,9 @@ public class CommissionQueryService {
 
         for (AgentCommissionSummaryDto summary : summaryByAgent.values()) {
             summary.setNetCommission(
-                    summary.getScopeNew()
-                            .add(summary.getScopeDelta())
-                            .add(summary.getNifra())
+                    summary.getPerimeterFeeNew()
+                            .add(summary.getPerimeterFeeDelta())
+                            .add(summary.getTrailCommission())
                             .subtract(summary.getClawbacks())
             );
         }

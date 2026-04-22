@@ -187,7 +187,7 @@ public class StatisticsJdbcService {
                 from (
                     select
                         date_format(balance_date, '%Y-%m') as month,
-                        count(case when reason = 'SCOPE_NEW' then 1 end) as new_clients,
+                        count(case when reason = 'PERIMETER_FEE_NEW' then 1 end) as new_clients,
                         0 as left_clients,
                         0 as transferred_clients
                     from commission_transactions
