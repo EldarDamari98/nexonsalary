@@ -1,12 +1,12 @@
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
-function AppLayout({ children }) {
+function AppLayout({ children, onLogout }) {
   return (
     <div className="app-shell">
       <Sidebar />
       <div className="app-main">
-        <Topbar />
+        <Topbar onLogout={onLogout} />
         <main className="app-content">{children}</main>
       </div>
     </div>
