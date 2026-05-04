@@ -4,11 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "agents")
-public class Agent {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Agent extends BaseEntity {
 
     @Column(name = "agent_code", nullable = false, unique = true, length = 50)
     private String agentCode;
@@ -26,10 +22,6 @@ public class Agent {
         this.agentCode = agentCode;
         this.agentName = agentName;
         this.active = true;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getAgentCode() {

@@ -2,18 +2,23 @@ package com.nexonsalary.service;
 
 import com.nexonsalary.dto.CommissionCalculationResultDto;
 import com.nexonsalary.model.*;
+import com.nexonsalary.service.handler.*;
 import com.nexonsalary.util.HibernateUtil;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class CommissionCalculationService {
+
+    private final CommissionHandler newClientHandler = new NewClientHandler();
+    private final CommissionHandler existingClientHandler = new ExistingClientHandler();
+    private final CommissionHandler agentTransferHandler = new AgentTransferHandler(newClientHandler);
+    private final CommissionHandler clientLeftHandler = new ClientLeftHandler();
 
     public void deleteForMonth(LocalDate month) {
         Session session = HibernateUtil.getSessionFactory().openSession();
@@ -55,18 +60,8 @@ public class CommissionCalculationService {
                 Long accountId = current.getAccount().getId();
                 MonthlyMemberBalance previous = getPreviousBalance(session, accountId, month);
 
-                if (previous == null) {
-                    handleNewClient(session, current, month, result);
-                } else {
-                    Long currentAgentId = current.getAgent().getId();
-                    Long previousAgentId = previous.getAgent().getId();
-
-                    if (currentAgentId.equals(previousAgentId)) {
-                        handleExistingClient(session, current, previous, month, result);
-                    } else {
-                        handleAgentTransfer(session, current, previous, month, result);
-                    }
-                }
+                CommissionHandler handler = resolveHandler(previous, current);
+                handler.handle(session, current, previous, month, result);
 
                 processedAccountIds.add(accountId);
             }
@@ -78,7 +73,7 @@ public class CommissionCalculationService {
                 if (!processedAccountIds.contains(accountId)) {
                     MonthlyMemberBalance lastBalance = getPreviousBalance(session, accountId, month);
                     if (lastBalance != null) {
-                        handleClientLeft(session, history, lastBalance, month, result);
+                        clientLeftHandler.handle(session, null, lastBalance, month, result);
                     }
                 }
             }
@@ -102,144 +97,10 @@ public class CommissionCalculationService {
         }
     }
 
-    // --- Handlers ---
-
-    private void handleNewClient(Session session, MonthlyMemberBalance current,
-                                  LocalDate month, CommissionCalculationResultDto result) {
-        BigDecimal perimeterFeeAmount = calcPerimeterFee(current.getTotalBalance());
-        BigDecimal trailCommissionAmount = calcTrailCommission(current.getTotalBalance());
-
-        ClientAgentHistory history = new ClientAgentHistory(
-                current.getAccount(), current.getAgent(), current.getMember(), month, perimeterFeeAmount
-        );
-        session.persist(history);
-
-        persistTransaction(session, current, month, BigDecimal.ZERO, current.getTotalBalance(),
-                current.getTotalBalance(), CommissionRates.PERIMETER_FEE_RATE, perimeterFeeAmount,
-                CommissionDirection.CREDIT, CommissionReason.PERIMETER_FEE_NEW);
-
-        persistTransaction(session, current, month, BigDecimal.ZERO, current.getTotalBalance(),
-                BigDecimal.ZERO, CommissionRates.TRAIL_COMMISSION_RATE, trailCommissionAmount,
-                CommissionDirection.CREDIT, CommissionReason.TRAIL_COMMISSION);
-
-        result.setNewClients(result.getNewClients() + 1);
-        result.setTotalPerimeterFeeNew(result.getTotalPerimeterFeeNew().add(perimeterFeeAmount));
-        result.setTotalTrailCommission(result.getTotalTrailCommission().add(trailCommissionAmount));
-        result.setTransactionCount(result.getTransactionCount() + 2);
-    }
-
-    private void handleExistingClient(Session session, MonthlyMemberBalance current,
-                                       MonthlyMemberBalance previous, LocalDate month,
-                                       CommissionCalculationResultDto result) {
-        BigDecimal delta = current.getTotalBalance().subtract(previous.getTotalBalance());
-
-        ClientAgentHistory history = findActiveHistory(session, current.getAccount().getId(), current.getAgent().getId());
-
-        // Nifra always on current balance
-        BigDecimal trailCommissionAmount = calcTrailCommission(current.getTotalBalance());
-        persistTransaction(session, current, month, previous.getTotalBalance(), current.getTotalBalance(),
-                delta, CommissionRates.TRAIL_COMMISSION_RATE, trailCommissionAmount,
-                CommissionDirection.CREDIT, CommissionReason.TRAIL_COMMISSION);
-        result.setTotalTrailCommission(result.getTotalTrailCommission().add(trailCommissionAmount));
-        result.setExistingClients(result.getExistingClients() + 1);
-        result.setTransactionCount(result.getTransactionCount() + 1);
-    }
-
-    private void handleAgentTransfer(Session session, MonthlyMemberBalance current,
-                                      MonthlyMemberBalance previous, LocalDate month,
-                                      CommissionCalculationResultDto result) {
-        // Old agent: apply leave rules
-        ClientAgentHistory oldHistory = findActiveHistory(session, previous.getAccount().getId(), previous.getAgent().getId());
-        if (oldHistory != null) {
-            applyLeave(session, oldHistory, previous, month, result);
-        }
-
-        // New agent: treat as new client
-        handleNewClient(session, current, month, result);
-
-        // Adjust counters: this is a transfer, not purely a new client
-        result.setNewClients(result.getNewClients() - 1);
-        result.setTransferredClients(result.getTransferredClients() + 1);
-    }
-
-    private void handleClientLeft(Session session, ClientAgentHistory history,
-                                   MonthlyMemberBalance lastBalance, LocalDate month,
-                                   CommissionCalculationResultDto result) {
-        applyLeave(session, history, lastBalance, month, result);
-        result.setLeftClients(result.getLeftClients() + 1);
-    }
-
-    // --- Leave / Clawback logic ---
-
-    private void applyLeave(Session session, ClientAgentHistory history,
-                             MonthlyMemberBalance lastBalance, LocalDate month,
-                             CommissionCalculationResultDto result) {
-        long tenureMonths = ChronoUnit.MONTHS.between(history.getFirstAppearanceDate(), month);
-
-        BigDecimal clawbackRate = BigDecimal.ZERO;
-        if (tenureMonths < 12) {
-            clawbackRate = CommissionRates.CLAWBACK_UNDER_12_MONTHS;
-        } else if (tenureMonths < 24) {
-            clawbackRate = CommissionRates.CLAWBACK_12_TO_24_MONTHS;
-        }
-
-        if (clawbackRate.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal clawbackAmount = history.getTotalPerimeterFeePaid()
-                    .multiply(clawbackRate)
-                    .setScale(2, RoundingMode.HALF_UP);
-
-            CommissionTransaction clawbackTx = buildTransaction(lastBalance, month,
-                    lastBalance.getTotalBalance(), BigDecimal.ZERO,
-                    lastBalance.getTotalBalance().negate(),
-                    clawbackRate, clawbackAmount,
-                    CommissionDirection.DEBIT, CommissionReason.PERIMETER_FEE_CLAWBACK);
-            session.persist(clawbackTx);
-
-            result.setTotalClawbacks(result.getTotalClawbacks().add(clawbackAmount));
-            result.setTransactionCount(result.getTransactionCount() + 1);
-        }
-
-        history.setStatus(ClientStatus.LEFT);
-        history.setLeaveDate(month);
-        session.merge(history);
-    }
-
-    // --- Helpers ---
-
-    private void persistTransaction(Session session, MonthlyMemberBalance balance, LocalDate month,
-                                     BigDecimal prevBal, BigDecimal currBal, BigDecimal delta,
-                                     BigDecimal rate, BigDecimal amount,
-                                     CommissionDirection direction, CommissionReason reason) {
-        session.persist(buildTransaction(balance, month, prevBal, currBal, delta, rate, amount, direction, reason));
-    }
-
-    private CommissionTransaction buildTransaction(MonthlyMemberBalance balance, LocalDate month,
-                                                    BigDecimal prevBal, BigDecimal currBal, BigDecimal delta,
-                                                    BigDecimal rate, BigDecimal amount,
-                                                    CommissionDirection direction, CommissionReason reason) {
-        CommissionTransaction tx = new CommissionTransaction();
-        tx.setMember(balance.getMember());
-        tx.setAgent(balance.getAgent());
-        tx.setAccount(balance.getAccount());
-        tx.setBalanceDate(month);
-        tx.setPreviousBalance(prevBal);
-        tx.setCurrentBalance(currBal);
-        tx.setDeltaBalance(delta);
-        tx.setCommissionRate(rate);
-        tx.setCommissionAmount(amount);
-        tx.setDirection(direction);
-        tx.setReason(reason);
-        return tx;
-    }
-
-    private BigDecimal calcPerimeterFee(BigDecimal amount) {
-        return amount.multiply(CommissionRates.PERIMETER_FEE_RATE).setScale(2, RoundingMode.HALF_UP);
-    }
-
-
-    private BigDecimal calcTrailCommission(BigDecimal amount) {
-
-        return amount.multiply(CommissionRates.TRAIL_COMMISSION_RATE).setScale(2, RoundingMode.HALF_UP);
+    private CommissionHandler resolveHandler(MonthlyMemberBalance previous, MonthlyMemberBalance current) {
+        if (previous == null) return newClientHandler;
+        if (previous.getAgent().getId().equals(current.getAgent().getId())) return existingClientHandler;
+        return agentTransferHandler;
     }
 
     // --- Queries ---
@@ -274,13 +135,5 @@ public class CommissionCalculationService {
                 "from ClientAgentHistory cah join fetch cah.account join fetch cah.agent join fetch cah.member where cah.status = :status",
                 ClientAgentHistory.class
         ).setParameter("status", ClientStatus.ACTIVE).list();
-    }
-
-    private ClientAgentHistory findActiveHistory(Session session, Long accountId, Long agentId) {
-        return session.createQuery(
-                "from ClientAgentHistory cah where cah.account.id = :accountId and cah.agent.id = :agentId and cah.status = :status",
-                ClientAgentHistory.class
-        ).setParameter("accountId", accountId).setParameter("agentId", agentId)
-                .setParameter("status", ClientStatus.ACTIVE).uniqueResult();
     }
 }

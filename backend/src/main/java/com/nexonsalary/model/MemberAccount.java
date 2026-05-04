@@ -2,15 +2,9 @@ package com.nexonsalary.model;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "member_accounts")
-public class MemberAccount {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class MemberAccount extends BaseEntity {
 
     @Column(name = "account_number", nullable = false, unique = true, length = 50)
     private String accountNumber;
@@ -23,9 +17,6 @@ public class MemberAccount {
     @JoinColumn(name = "agent_id")
     private Agent agent;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
     public MemberAccount() {
     }
 
@@ -33,15 +24,6 @@ public class MemberAccount {
         this.accountNumber = accountNumber;
         this.member = member;
         this.agent = agent;
-    }
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getAccountNumber() {
@@ -68,7 +50,4 @@ public class MemberAccount {
         this.agent = agent;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 }
