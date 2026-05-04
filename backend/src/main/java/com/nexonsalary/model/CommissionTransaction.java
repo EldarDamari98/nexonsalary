@@ -4,15 +4,10 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "commission_transactions")
-public class CommissionTransaction {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class CommissionTransaction extends BaseEntity {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
@@ -52,19 +47,7 @@ public class CommissionTransaction {
     @Column(name = "reason", nullable = false, length = 30)
     private CommissionReason reason;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
     public CommissionTransaction() {
-    }
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public Member getMember() {
@@ -155,7 +138,4 @@ public class CommissionTransaction {
         this.reason = reason;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 }

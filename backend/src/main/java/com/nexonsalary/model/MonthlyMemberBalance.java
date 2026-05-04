@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(
@@ -16,11 +15,7 @@ import java.time.LocalDateTime;
                 )
         }
 )
-public class MonthlyMemberBalance {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class MonthlyMemberBalance extends BaseEntity {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
@@ -47,9 +42,6 @@ public class MonthlyMemberBalance {
     @Column(name = "source_file_name", length = 255)
     private String sourceFileName;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
     public MonthlyMemberBalance() {
     }
 
@@ -67,15 +59,6 @@ public class MonthlyMemberBalance {
         this.balanceDate = balanceDate;
         this.totalBalance = totalBalance;
         this.sourceFileName = sourceFileName;
-    }
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public Member getMember() {
@@ -132,9 +115,5 @@ public class MonthlyMemberBalance {
 
     public void setSourceFileName(String sourceFileName) {
         this.sourceFileName = sourceFileName;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
     }
 }

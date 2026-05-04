@@ -4,11 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "members")
-public class Member {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Member extends BaseEntity {
 
     @Column(name = "national_id", nullable = false, unique = true, length = 20)
     private String nationalId;
@@ -22,10 +18,6 @@ public class Member {
     public Member(String nationalId, String fullName) {
         this.nationalId = nationalId;
         this.fullName = fullName;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getNationalId() {

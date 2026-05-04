@@ -8,11 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "client_agent_history")
-public class ClientAgentHistory {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class ClientAgentHistory extends BaseEntity {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
@@ -40,9 +36,6 @@ public class ClientAgentHistory {
     @Column(name = "total_scope_paid", nullable = false, precision = 18, scale = 2)
     private BigDecimal totalPerimeterFeePaid = BigDecimal.ZERO;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
@@ -59,9 +52,10 @@ public class ClientAgentHistory {
         this.totalPerimeterFeePaid = initialPerimeterFeePaid;
     }
 
+    @Override
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+        super.prePersist();
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -69,8 +63,6 @@ public class ClientAgentHistory {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-    public Long getId() { return id; }
 
     public MemberAccount getAccount() { return account; }
     public void setAccount(MemberAccount account) { this.account = account; }
@@ -93,6 +85,5 @@ public class ClientAgentHistory {
     public BigDecimal getTotalPerimeterFeePaid() { return totalPerimeterFeePaid; }
     public void setTotalPerimeterFeePaid(BigDecimal totalPerimeterFeePaid) { this.totalPerimeterFeePaid = totalPerimeterFeePaid; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
