@@ -37,11 +37,20 @@ public class NewClientHandler extends AbstractCommissionHandler {
         BigDecimal perimeterFeeAmount = calcPerimeterFee(current.getTotalBalance());
         BigDecimal trailCommissionAmount = calcTrailCommission(current.getTotalBalance());
 
-        // Start tracking this client's tenure with the agent (needed for future clawback)
-        ClientAgentHistory history = new ClientAgentHistory(
-                current.getAccount(), current.getAgent(), current.getMember(), month, perimeterFeeAmount
-        );
-        session.persist(history);
+        // Start tracking this client's tenure with the agent (needed for future clawback),
+        // unless an active history already exists for this account+agent (e.g. an earlier
+        // month was calculated after this one) — in that case reuse it instead of
+        // creating a duplicate ACTIVE record.
+        ClientAgentHistory history = findActiveHistory(session, current.getAccount().getId(), current.getAgent().getId());
+        if (history == null) {
+            history = new ClientAgentHistory(
+                    current.getAccount(), current.getAgent(), current.getMember(), month, perimeterFeeAmount
+            );
+            session.persist(history);
+        } else {
+            history.setTotalPerimeterFeePaid(history.getTotalPerimeterFeePaid().add(perimeterFeeAmount));
+            session.merge(history);
+        }
 
         // Commission 1: Perimeter fee on the full balance for acquiring a new client
         persistTransaction(session, current, month, BigDecimal.ZERO, current.getTotalBalance(),

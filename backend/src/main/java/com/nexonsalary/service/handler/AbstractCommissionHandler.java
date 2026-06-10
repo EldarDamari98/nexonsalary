@@ -111,11 +111,12 @@ public abstract class AbstractCommissionHandler implements CommissionHandler {
      */
     protected ClientAgentHistory findActiveHistory(Session session, Long accountId, Long agentId) {
         return session.createQuery(
-                "from ClientAgentHistory cah where cah.account.id = :accountId and cah.agent.id = :agentId and cah.status = :status",
+                "from ClientAgentHistory cah where cah.account.id = :accountId and cah.agent.id = :agentId and cah.status = :status order by cah.id desc",
                 ClientAgentHistory.class
         ).setParameter("accountId", accountId)
                 .setParameter("agentId", agentId)
                 .setParameter("status", ClientStatus.ACTIVE)
+                .setMaxResults(1)
                 .uniqueResult();
     }
 
